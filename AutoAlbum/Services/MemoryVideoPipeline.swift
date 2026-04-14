@@ -9,23 +9,33 @@ extension LLMClient: RecommendationProviding {}
 struct MemoryVideoGenerationResult: Equatable {
     let summary: AssetSummary
     let recommendation: LLMRecommendation
+    let clusters: [RecommendationCluster]
     let plan: CompositionPlan
     let exportURL: URL
 }
 
 final class MemoryVideoPipeline {
     private let summaryBuilder: AssetSummaryBuilder
+    private let selectionFilter: AssetSelectionFilter
+    private let recommendationNormalizer: RecommendationNormalizer
+    private let recommendationClusterer: RecommendationClusterer
     private let recommendationClient: RecommendationProviding
     private let exportService: VideoExporting
     private let fallbackStyle: RecommendedStyle
 
     init(
         summaryBuilder: AssetSummaryBuilder = AssetSummaryBuilder(),
+        selectionFilter: AssetSelectionFilter = AssetSelectionFilter(),
+        recommendationNormalizer: RecommendationNormalizer = RecommendationNormalizer(),
+        recommendationClusterer: RecommendationClusterer = RecommendationClusterer(),
         recommendationClient: RecommendationProviding,
         exportService: VideoExporting = VideoExportService(),
         fallbackStyle: RecommendedStyle = .lifeLog
     ) {
         self.summaryBuilder = summaryBuilder
+        self.selectionFilter = selectionFilter
+        self.recommendationNormalizer = recommendationNormalizer
+        self.recommendationClusterer = recommendationClusterer
         self.recommendationClient = recommendationClient
         self.exportService = exportService
         self.fallbackStyle = fallbackStyle
@@ -40,14 +50,20 @@ final class MemoryVideoPipeline {
         to destinationURL: URL,
         preferredStyle: RecommendedStyle?
     ) async throws -> MemoryVideoGenerationResult {
-        let summary = summaryBuilder.build(from: assets)
-        let recommendation = applyPreferredStyle(try await loadRecommendation(for: summary), preferredStyle: preferredStyle)
-        let plan = CompositionPlanner().buildPlan(recommendation: recommendation, assets: assets)
-        let exportURL = try await exportService.export(plan: plan, assets: assets, to: destinationURL)
+        let eligibleAssets = selectionFilter.filter(assets)
+        let summary = summaryBuilder.build(from: eligibleAssets)
+        let recommendation = recommendationNormalizer.normalize(
+            applyPreferredStyle(try await loadRecommendation(for: summary), preferredStyle: preferredStyle),
+            summary: summary
+        )
+        let clusters = recommendationClusterer.cluster(highlights: recommendation.highlightItems, summary: summary)
+        let plan = CompositionPlanner().buildPlan(recommendation: recommendation, assets: eligibleAssets)
+        let exportURL = try await exportService.export(plan: plan, assets: eligibleAssets, to: destinationURL)
 
         return MemoryVideoGenerationResult(
             summary: summary,
             recommendation: recommendation,
+            clusters: clusters,
             plan: plan,
             exportURL: exportURL
         )

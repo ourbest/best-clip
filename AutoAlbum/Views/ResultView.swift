@@ -4,6 +4,7 @@ struct ResultView: View {
     let exportURL: URL?
     let plan: CompositionPlan
     let summary: AssetSummary
+    let clusters: [RecommendationCluster]
     let onDone: () -> Void
     let onSaveToPhotos: () -> Void
     let saveStatus: String?
@@ -35,6 +36,10 @@ struct ResultView: View {
 
                 if let saveStatus {
                     statusCard(text: saveStatus, systemImage: "checkmark.seal.fill")
+                }
+
+                if !clusters.isEmpty {
+                    clusterCard
                 }
 
                 Button(action: onDone) {
@@ -75,11 +80,12 @@ struct ResultView: View {
 
             HStack(spacing: 8) {
                 chip("\(plan.sections.count) 个片段")
+                chip(summary.recommendedTheme)
                 chip(plan.musicStyle)
                 chip(plan.transitionStyle)
             }
 
-            Text("已选择 \(summary.highlightItems.count) 个高光线索，输出为 \(plan.aspectRatio == .portrait9x16 ? "9:16 竖屏" : "自定义")。")
+            Text("已选择 \(summary.highlightItems.count) 个高光线索，分成 \(clusters.count) 组主题，输出为 \(plan.aspectRatio == .portrait9x16 ? "9:16 竖屏" : "自定义")。")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }
@@ -123,5 +129,69 @@ struct ResultView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .background(Color.secondary.opacity(0.08), in: Capsule())
+    }
+
+    private var clusterCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("主题分组")
+                    .font(.headline)
+                Spacer()
+                Text("\(clusters.count) 组")
+                    .font(.caption.bold())
+                    .foregroundStyle(Color.accentColor)
+            }
+
+            Text("按推荐高光和内容语义自动分组，优先展示最核心的主题。")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+
+            if let primary = clusters.first {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(primary.title)
+                                .font(.subheadline.bold())
+                            Text(primary.reason)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Text("\(primary.itemCount) 项")
+                            .font(.caption.bold())
+                            .foregroundStyle(Color.accentColor)
+                    }
+
+                    Text("主分组覆盖 \(primary.itemCount) 个高光线索")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding()
+                .background(Color.accentColor.opacity(0.10), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            }
+
+            if clusters.count > 1 {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(clusters.dropFirst()) { cluster in
+                        HStack(alignment: .top, spacing: 10) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(cluster.title)
+                                    .font(.subheadline.bold())
+                                Text(cluster.reason)
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Text("\(cluster.itemCount) 项")
+                                .font(.caption.bold())
+                                .foregroundStyle(Color.accentColor)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(Color.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 }

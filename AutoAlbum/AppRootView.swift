@@ -47,6 +47,7 @@ struct AppRootView: View {
                         exportURL: flow.exportURL,
                         plan: flow.plan(),
                         summary: flow.summary(),
+                        clusters: flow.clusters,
                         onDone: { state.currentRoute = .home },
                         onSaveToPhotos: {
                             flow.saveExportToPhotos()
