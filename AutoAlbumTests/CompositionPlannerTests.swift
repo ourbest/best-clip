@@ -204,6 +204,59 @@ final class CompositionPlannerTests: XCTestCase {
         XCTAssertGreaterThan(sections[0].endSeconds - sections[0].startSeconds, 0)
     }
 
+    func testKeepsContentRichVideoLongerThanMotionOnlyVideo() {
+        let recommendation = LLMRecommendation(
+            theme: "周末日常",
+            recommendedStyle: .lifeLog,
+            title: "周末碎片",
+            subtitle: "把普通的一天，剪成值得回看的回忆",
+            highlightItems: [
+                .init(id: "content", priority: 1, reason: "有人物和语音"),
+                .init(id: "motion", priority: 2, reason: "纯动作镜头")
+            ],
+            musicStyle: "轻快温暖",
+            transitionStyle: "柔和",
+            sharingCopy: "周末的这些小片段，拼起来就是我喜欢的生活。"
+        )
+
+        let contentRich = MediaAssetSnapshot(
+            id: "content",
+            kind: .video,
+            timestamp: Date(timeIntervalSince1970: 1_700_400_000),
+            duration: 12.0,
+            faces: 3,
+            scene: "restaurant",
+            sharpness: 0.84,
+            stability: 0.86,
+            motion: 0.14,
+            ocrText: "happy birthday",
+            speechText: "cheers",
+            sourceURL: nil
+        )
+        let motionOnly = MediaAssetSnapshot(
+            id: "motion",
+            kind: .video,
+            timestamp: Date(timeIntervalSince1970: 1_700_400_030),
+            duration: 12.0,
+            faces: 0,
+            scene: "street",
+            sharpness: 0.84,
+            stability: 0.42,
+            motion: 0.82,
+            ocrText: nil,
+            speechText: nil,
+            sourceURL: nil
+        )
+
+        let plan = CompositionPlanner().buildPlan(recommendation: recommendation, assets: [contentRich, motionOnly])
+
+        let contentSections = plan.sections.filter { $0.assetID == "content" }
+        let motionSections = plan.sections.filter { $0.assetID == "motion" }
+
+        XCTAssertEqual(contentSections.count, 1)
+        XCTAssertGreaterThan(contentSections[0].endSeconds - contentSections[0].startSeconds, motionSections[0].endSeconds - motionSections[0].startSeconds)
+    }
+
     func testVideoComposerUsesSectionSourceRange() {
         let composer = VideoComposer()
         let range = composer.clipTimeRange(

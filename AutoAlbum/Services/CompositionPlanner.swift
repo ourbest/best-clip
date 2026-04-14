@@ -76,22 +76,27 @@ struct CompositionPlanner {
 
     private func videoSegmentCount(for asset: MediaAssetSnapshot, sourceDuration: Double) -> Int {
         let motion = videoMotion(for: asset)
-        let hasContent = asset.speechText != nil || asset.ocrText != nil
+        let contentWeight = videoContentWeight(for: asset)
+        let hasStrongContent = contentWeight >= 0.5
 
         if sourceDuration < 6 {
             return 1
         }
 
-        if sourceDuration >= 16, motion >= 0.55, !hasContent {
-            return 3
+        if hasStrongContent, sourceDuration <= 12 {
+            return 1
         }
 
-        if sourceDuration >= 10, motion >= 0.35, !hasContent {
+        if hasStrongContent {
             return 2
         }
 
-        if hasContent {
-            return sourceDuration >= 12 ? 2 : 1
+        if sourceDuration >= 16, motion >= 0.55 {
+            return 3
+        }
+
+        if sourceDuration >= 10, motion >= 0.35 {
+            return 2
         }
 
         return motion > 0.65 ? 2 : 1
@@ -100,13 +105,13 @@ struct CompositionPlanner {
     private func videoSegmentDuration(for asset: MediaAssetSnapshot, sourceDuration: Double, segmentCount: Int) -> Double {
         let motion = videoMotion(for: asset)
         let stability = min(max(asset.stability, 0.0), 1.0)
-        let contentBonus = asset.speechText != nil ? 0.35 : (asset.ocrText != nil ? 0.15 : 0.0)
-        let motionPenalty = motion * 0.95
+        let contentWeight = videoContentWeight(for: asset)
+        let motionPenalty = motion * (contentWeight >= 0.5 ? 0.55 : 0.95)
         let base = sourceDuration / Double(segmentCount)
-        let adjusted = base + max(0.0, (stability - 0.5) * 1.3) + contentBonus - motionPenalty
-        let upperBound = min(4.5, sourceDuration)
+        let adjusted = base + max(0.0, (stability - 0.5) * 1.1) + contentWeight - motionPenalty
+        let upperBound = segmentCount == 1 ? sourceDuration : min(4.5, sourceDuration)
 
-        return min(max(adjusted, 1.8), upperBound)
+        return min(max(adjusted, contentWeight >= 0.5 ? 2.2 : 1.8), upperBound)
     }
 
     private func segmentWindows(sourceDuration: Double, segmentDuration: Double, segmentCount: Int) -> [(start: Double, end: Double)] {
@@ -125,5 +130,11 @@ struct CompositionPlanner {
 
     private func videoMotion(for asset: MediaAssetSnapshot) -> Double {
         min(max(asset.motion ?? max(0.0, 1.0 - asset.stability), 0.0), 1.0)
+    }
+
+    private func videoContentWeight(for asset: MediaAssetSnapshot) -> Double {
+        let faceWeight = min(Double(asset.faces), 3.0) * 0.12
+        let textWeight = (asset.ocrText?.isEmpty == false ? 0.18 : 0.0) + (asset.speechText?.isEmpty == false ? 0.24 : 0.0)
+        return faceWeight + textWeight
     }
 }
