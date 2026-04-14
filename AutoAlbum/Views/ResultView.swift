@@ -2,22 +2,126 @@ import SwiftUI
 
 struct ResultView: View {
     let exportURL: URL?
+    let plan: CompositionPlan
+    let summary: AssetSummary
     let onDone: () -> Void
+    let onSaveToPhotos: () -> Void
+    let saveStatus: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("generation_complete")
-                .font(.largeTitle.bold())
-                .accessibilityIdentifier("generation_complete")
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                header
+                resultCard
 
-            if let exportURL {
-                Text(exportURL.lastPathComponent)
-                    .foregroundStyle(.secondary)
+                if let exportURL {
+                    fileCard(exportURL: exportURL)
+
+                    HStack(spacing: 12) {
+                        ShareLink(item: exportURL) {
+                            Label("分享视频", systemImage: "square.and.arrow.up")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+
+                        Button(action: onSaveToPhotos) {
+                            Label("保存到相册", systemImage: "square.and.arrow.down")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                    .controlSize(.large)
+                }
+
+                if let saveStatus {
+                    statusCard(text: saveStatus, systemImage: "checkmark.seal.fill")
+                }
+
+                Button(action: onDone) {
+                    Label("完成", systemImage: "house")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .accessibilityIdentifier("generation_complete")
+            }
+            .padding()
+        }
+    }
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("生成完成")
+                .font(.system(size: 30, weight: .bold, design: .rounded))
+            Text("结果已经导出，可以直接分享、保存，或者回到首页开始下一条回忆。")
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var resultCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(plan.title)
+                        .font(.title2.bold())
+                    Text(plan.subtitle)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "play.rectangle.fill")
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundStyle(.accent)
             }
 
-            Button("完成", action: onDone)
-                .buttonStyle(.borderedProminent)
+            HStack(spacing: 8) {
+                chip("\(plan.sections.count) 个片段")
+                chip(plan.musicStyle)
+                chip(plan.transitionStyle)
+            }
+
+            Text("已选择 \(summary.highlightItems.count) 个高光线索，输出为 \(plan.aspectRatio == .portrait9x16 ? "9:16 竖屏" : "自定义")。")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
         }
         .padding()
+        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
+
+    private func fileCard(exportURL: URL) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "film.stack.fill")
+                .foregroundStyle(.accent)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(exportURL.lastPathComponent)
+                    .font(.headline)
+                Text(exportURL.path)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+            Spacer()
+        }
+        .padding()
+        .background(Color.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+
+    private func statusCard(text: String, systemImage: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: systemImage)
+                .foregroundStyle(.accent)
+            Text(text)
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+        .padding()
+        .background(Color.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private func chip(_ text: String) -> some View {
+        Text(text)
+            .font(.caption.bold())
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Color.secondary.opacity(0.08), in: Capsule())
     }
 }

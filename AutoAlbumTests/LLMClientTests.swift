@@ -64,6 +64,26 @@ final class LLMClientTests: XCTestCase {
     }
 }
 
+final class GenerationFlowViewModelTests: XCTestCase {
+    func testUsesStubRecommendationStyleAndCreatesStubExportDuringUITesting() async {
+        let viewModel = GenerationFlowViewModel(
+            launchArguments: [
+                "-uiTesting",
+                "-stubRecommendation",
+                "短视频爆款感"
+            ]
+        )
+
+        XCTAssertEqual(viewModel.selectedStyle, .shortVideo)
+        XCTAssertEqual(viewModel.recommendation.recommendedStyle, .shortVideo)
+
+        await viewModel.generatePreviewExportAsync()
+
+        XCTAssertEqual(viewModel.exportURL?.lastPathComponent, "memory-video.mov")
+        XCTAssertEqual(viewModel.generationStage, .finished)
+    }
+}
+
 final class MockURLProtocol: URLProtocol {
     static var requestHandler: ((URLRequest) throws -> HTTPURLResponseWithData)?
 

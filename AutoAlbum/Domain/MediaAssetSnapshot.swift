@@ -17,4 +17,5 @@ struct MediaAssetSnapshot: Identifiable, Codable, Equatable {
     let ocrText: String?
     let speechText: String?
     let sourceURL: URL? = nil
+    let previewURL: URL? = nil
 }
