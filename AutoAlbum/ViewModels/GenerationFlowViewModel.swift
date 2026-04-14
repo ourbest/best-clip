@@ -3,17 +3,25 @@ import SwiftUI
 
 @MainActor
 final class GenerationFlowViewModel: ObservableObject {
-    @Published var availableAssets: [MediaAssetSnapshot] = Self.demoAssets()
+    @Published var availableAssets: [MediaAssetSnapshot] = []
     @Published var selectedAssetIDs: Set<String> = []
-    @Published var recommendation: LLMRecommendation = Self.demoRecommendation()
+    @Published var recommendation: LLMRecommendation = LLMRecommendation(
+        theme: "",
+        recommendedStyle: .lifeLog,
+        title: "",
+        subtitle: "",
+        highlightItems: [],
+        musicStyle: "",
+        transitionStyle: "",
+        sharingCopy: ""
+    )
     @Published var selectedStyle: RecommendedStyle = .lifeLog
     @Published var isGenerating = false
     @Published var exportURL: URL? = nil
 
     init() {
-        if ProcessInfo.processInfo.arguments.contains("-stubRecommendation") {
-            recommendation = Self.demoRecommendation()
-        }
+        availableAssets = Self.demoAssets()
+        recommendation = Self.demoRecommendation()
     }
 
     var selectedAssets: [MediaAssetSnapshot] {
@@ -79,8 +87,7 @@ final class GenerationFlowViewModel: ObservableObject {
                 sharpness: 0.94,
                 stability: 0.88,
                 ocrText: "happy sunday",
-                speechText: nil,
-                sourceURL: nil
+                speechText: nil
             ),
             MediaAssetSnapshot(
                 id: "asset-2",
@@ -92,8 +99,7 @@ final class GenerationFlowViewModel: ObservableObject {
                 sharpness: 0.81,
                 stability: 0.71,
                 ocrText: nil,
-                speechText: "let's go",
-                sourceURL: nil
+                speechText: "let's go"
             ),
             MediaAssetSnapshot(
                 id: "asset-3",
@@ -105,8 +111,7 @@ final class GenerationFlowViewModel: ObservableObject {
                 sharpness: 0.89,
                 stability: 0.91,
                 ocrText: nil,
-                speechText: nil,
-                sourceURL: nil
+                speechText: nil
             )
         ]
     }

@@ -1,0 +1,88 @@
+name: AutoAlbum
+options:
+  bundleIdPrefix: com.autoalbum
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "16.0"
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: "NO"
+
+targets:
+  AutoAlbum:
+    type: application
+    platform: iOS
+    sources:
+      - path: AutoAlbum
+        excludes:
+          - "**/.DS_Store"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.autoalbum.AutoAlbum
+        INFOPLIST_FILE: AutoAlbum/Info.plist
+        CODE_SIGN_STYLE: Automatic
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        GENERATE_INFOPLIST_FILE: YES
+        DEVELOPMENT_TEAM: ""
+    info:
+      path: AutoAlbum/Info.plist
+      properties:
+        CFBundleDisplayName: AutoAlbum
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSPhotoLibraryUsageDescription: "需要访问您的照片库以生成回忆视频"
+        NSPhotoLibraryAddUsageDescription: "需要保存生成的视频到您的照片库"
+  AutoAlbumTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: AutoAlbumTests
+        excludes:
+          - "**/.DS_Store"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.autoalbum.AutoAlbumTests
+        INFOPLIST_FILE: AutoAlbumTests/Info.plist
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/AutoAlbum.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/AutoAlbum"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: ""
+    dependencies:
+      - target: AutoAlbum
+
+  AutoAlbumUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: AutoAlbumUITests
+        excludes:
+          - "**/.DS_Store"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.autoalbum.AutoAlbumUITests
+        INFOPLIST_FILE: AutoAlbumUITests/Info.plist
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: AutoAlbum
+        UI_APPLICATION_SCENARIOS: true
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: ""
+    dependencies:
+      - target: AutoAlbum
