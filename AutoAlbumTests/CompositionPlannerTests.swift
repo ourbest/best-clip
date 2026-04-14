@@ -1,3 +1,4 @@
+import AVFoundation
 import XCTest
 @testable import AutoAlbum
 
@@ -162,5 +163,55 @@ final class CompositionPlannerTests: XCTestCase {
         let plan = CompositionPlanner().buildPlan(recommendation: recommendation, assets: [stable, shaky])
 
         XCTAssertGreaterThan(plan.sections[0].endSeconds, plan.sections[1].endSeconds)
+    }
+
+    func testSplitsLongHighMotionVideoIntoMultipleSections() {
+        let recommendation = LLMRecommendation(
+            theme: "旅行回顾",
+            recommendedStyle: .cinematic,
+            title: "旅途",
+            subtitle: "沿着时间线回看这次出发",
+            highlightItems: [
+                .init(id: "video-fast", priority: 1, reason: "适合拆成快节奏镜头")
+            ],
+            musicStyle: "氛围感",
+            transitionStyle: "柔和",
+            sharingCopy: "旅途记录。"
+        )
+
+        let video = MediaAssetSnapshot(
+            id: "video-fast",
+            kind: .video,
+            timestamp: Date(timeIntervalSince1970: 1_700_300_000),
+            duration: 18.0,
+            faces: 0,
+            scene: "city",
+            sharpness: 0.72,
+            stability: 0.31,
+            motion: 0.82,
+            ocrText: nil,
+            speechText: nil,
+            sourceURL: nil
+        )
+
+        let plan = CompositionPlanner().buildPlan(recommendation: recommendation, assets: [video])
+
+        let sections = plan.sections.filter { $0.assetID == "video-fast" }
+
+        XCTAssertEqual(sections.count, 3)
+        XCTAssertLessThanOrEqual(sections[0].endSeconds, sections[1].startSeconds)
+        XCTAssertLessThanOrEqual(sections[1].endSeconds, sections[2].startSeconds)
+        XCTAssertGreaterThan(sections[0].endSeconds - sections[0].startSeconds, 0)
+    }
+
+    func testVideoComposerUsesSectionSourceRange() {
+        let composer = VideoComposer()
+        let range = composer.clipTimeRange(
+            for: CompositionSection(assetID: "video", startSeconds: 4.0, endSeconds: 9.0),
+            sourceDuration: CMTime(seconds: 10.0, preferredTimescale: 600)
+        )
+
+        XCTAssertEqual(CMTimeGetSeconds(range.start), 4.0, accuracy: 0.0001)
+        XCTAssertEqual(CMTimeGetSeconds(range.duration), 5.0, accuracy: 0.0001)
     }
 }

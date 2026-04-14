@@ -3,12 +3,8 @@ import Foundation
 struct CompositionPlanner {
     func buildPlan(recommendation: LLMRecommendation, assets: [MediaAssetSnapshot]) -> CompositionPlan {
         let orderedAssets = orderedAssets(for: recommendation, assets: assets)
-        let sections = orderedAssets.enumerated().map { index, asset in
-            CompositionSection(
-                assetID: asset.id,
-                startSeconds: 0,
-                endSeconds: plannedDuration(for: asset, index: index, totalCount: orderedAssets.count)
-            )
+        let sections = orderedAssets.enumerated().flatMap { index, asset in
+            sections(for: asset, isFirst: index == 0, isLast: index == orderedAssets.count - 1)
         }
 
         return CompositionPlan(
@@ -33,25 +29,101 @@ struct CompositionPlanner {
         return assets.sorted { $0.timestamp < $1.timestamp }
     }
 
-    private func plannedDuration(for asset: MediaAssetSnapshot, index: Int, totalCount: Int) -> Double {
-        let baseDuration: Double
-
+    private func sections(for asset: MediaAssetSnapshot, isFirst: Bool, isLast: Bool) -> [CompositionSection] {
         switch asset.kind {
         case .photo:
-            baseDuration = index == 0 ? 2.8 : 2.4
+            return [CompositionSection(
+                assetID: asset.id,
+                startSeconds: 0,
+                endSeconds: photoDuration(for: asset, isFirst: isFirst, isLast: isLast)
+            )]
         case .video:
-            let duration = min(asset.duration ?? 4.0, 5.0)
-            let motion = min(max(asset.motion ?? max(0.0, 1.0 - asset.stability), 0.0), 1.0)
-            let stabilityBonus = max(0.0, (asset.stability - 0.5) * 1.2)
-            let contentBonus = asset.speechText != nil ? 0.3 : (asset.ocrText != nil ? 0.15 : 0.0)
-            let motionPenalty = motion * 0.9
-            baseDuration = max(1.8, min(duration + stabilityBonus + contentBonus - motionPenalty, 5.0))
+            return videoSections(for: asset, isLast: isLast)
+        }
+    }
+
+    private func photoDuration(for asset: MediaAssetSnapshot, isFirst: Bool, isLast: Bool) -> Double {
+        let baseDuration = isFirst ? 2.8 : 2.4
+        let duration = min(max(asset.duration ?? baseDuration, 1.8), 4.0)
+
+        if isLast {
+            return min(duration + 0.4, 4.0)
         }
 
-        if index == totalCount - 1 {
-            return max(2.2, min(baseDuration + 0.4, 4.0))
+        return duration
+    }
+
+    private func videoSections(for asset: MediaAssetSnapshot, isLast: Bool) -> [CompositionSection] {
+        let sourceDuration = max(asset.duration ?? 0, 0)
+        guard sourceDuration > 0 else { return [] }
+
+        let count = videoSegmentCount(for: asset, sourceDuration: sourceDuration)
+        let segmentDuration = videoSegmentDuration(for: asset, sourceDuration: sourceDuration, segmentCount: count)
+        let windows = segmentWindows(sourceDuration: sourceDuration, segmentDuration: segmentDuration, segmentCount: count)
+
+        return windows.enumerated().map { index, window in
+            let adjustedEnd = isLast && index == windows.count - 1
+                ? min(window.end + 0.4, sourceDuration)
+                : window.end
+
+            return CompositionSection(
+                assetID: asset.id,
+                startSeconds: window.start,
+                endSeconds: max(window.start, adjustedEnd)
+            )
+        }
+    }
+
+    private func videoSegmentCount(for asset: MediaAssetSnapshot, sourceDuration: Double) -> Int {
+        let motion = videoMotion(for: asset)
+        let hasContent = asset.speechText != nil || asset.ocrText != nil
+
+        if sourceDuration < 6 {
+            return 1
         }
 
-        return max(1.8, baseDuration)
+        if sourceDuration >= 16, motion >= 0.55, !hasContent {
+            return 3
+        }
+
+        if sourceDuration >= 10, motion >= 0.35, !hasContent {
+            return 2
+        }
+
+        if hasContent {
+            return sourceDuration >= 12 ? 2 : 1
+        }
+
+        return motion > 0.65 ? 2 : 1
+    }
+
+    private func videoSegmentDuration(for asset: MediaAssetSnapshot, sourceDuration: Double, segmentCount: Int) -> Double {
+        let motion = videoMotion(for: asset)
+        let stability = min(max(asset.stability, 0.0), 1.0)
+        let contentBonus = asset.speechText != nil ? 0.35 : (asset.ocrText != nil ? 0.15 : 0.0)
+        let motionPenalty = motion * 0.95
+        let base = sourceDuration / Double(segmentCount)
+        let adjusted = base + max(0.0, (stability - 0.5) * 1.3) + contentBonus - motionPenalty
+        let upperBound = min(4.5, sourceDuration)
+
+        return min(max(adjusted, 1.8), upperBound)
+    }
+
+    private func segmentWindows(sourceDuration: Double, segmentDuration: Double, segmentCount: Int) -> [(start: Double, end: Double)] {
+        guard segmentCount > 1 else {
+            return [(0, min(segmentDuration, sourceDuration))]
+        }
+
+        let availableSpan = max(sourceDuration - segmentDuration, 0)
+        return (0..<segmentCount).map { index in
+            let fraction = Double(index) / Double(segmentCount - 1)
+            let start = availableSpan * fraction
+            let end = min(start + segmentDuration, sourceDuration)
+            return (start, end)
+        }
+    }
+
+    private func videoMotion(for asset: MediaAssetSnapshot) -> Double {
+        min(max(asset.motion ?? max(0.0, 1.0 - asset.stability), 0.0), 1.0)
     }
 }

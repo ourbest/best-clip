@@ -17,14 +17,14 @@ final class VideoComposer: VideoComposing {
             }
 
             let sourceAsset = AVURLAsset(url: sourceURL)
-            let preferredDuration = CMTime(seconds: max(section.endSeconds - section.startSeconds, 0.5), preferredTimescale: 600)
-            let clipDuration = minCMTime(sourceAsset.duration, preferredDuration)
+            let clipRange = clipTimeRange(for: section, sourceDuration: sourceAsset.duration)
+            let clipDuration = clipRange.duration
             guard clipDuration > .zero else { continue }
 
             if let sourceTrack = sourceAsset.tracks(withMediaType: .video).first,
                let compositionTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid) {
                 try? compositionTrack.insertTimeRange(
-                    CMTimeRange(start: .zero, duration: clipDuration),
+                    clipRange,
                     of: sourceTrack,
                     at: cursor
                 )
@@ -33,7 +33,7 @@ final class VideoComposer: VideoComposing {
             if let sourceAudioTrack = sourceAsset.tracks(withMediaType: .audio).first,
                let compositionAudioTrack = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) {
                 try? compositionAudioTrack.insertTimeRange(
-                    CMTimeRange(start: .zero, duration: clipDuration),
+                    clipRange,
                     of: sourceAudioTrack,
                     at: cursor
                 )
@@ -45,8 +45,23 @@ final class VideoComposer: VideoComposing {
         return composition
     }
 
+    func clipTimeRange(for section: CompositionSection, sourceDuration: CMTime) -> CMTimeRange {
+        let sourceStart = CMTime(seconds: max(section.startSeconds, 0), preferredTimescale: 600)
+        let requestedDuration = CMTime(seconds: max(section.endSeconds - section.startSeconds, 0.5), preferredTimescale: 600)
+        let availableDuration = maxCMTime(sourceDuration - sourceStart, .zero)
+        let clipDuration = minCMTime(availableDuration, requestedDuration)
+        return CMTimeRange(start: sourceStart, duration: clipDuration)
+    }
+
     private func minCMTime(_ lhs: CMTime, _ rhs: CMTime) -> CMTime {
         if CMTimeCompare(lhs, rhs) <= 0 {
+            return lhs
+        }
+        return rhs
+    }
+
+    private func maxCMTime(_ lhs: CMTime, _ rhs: CMTime) -> CMTime {
+        if CMTimeCompare(lhs, rhs) >= 0 {
             return lhs
         }
         return rhs
