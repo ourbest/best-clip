@@ -90,6 +90,7 @@ final class GenerationFlowViewModel: ObservableObject {
     @Published var importError: String? = nil
     @Published var saveStatus: String? = nil
     @Published var generationStage: GenerationStage = .idle
+    @Published var clusters: [RecommendationCluster] = []
     @Published var settingsModelName: String
     @Published var settingsAPIKey: String
 
@@ -189,16 +190,17 @@ final class GenerationFlowViewModel: ObservableObject {
             return
         }
 
-        if let result = try? await pipeline.generate(
-            from: currentAssets,
-            to: outputURL,
-            preferredStyle: selectedStyle
-        ) {
-            recommendation = result.recommendation
-            exportURL = result.exportURL
-            generationStage = .finished
-            return
-        }
+            if let result = try? await pipeline.generate(
+                from: currentAssets,
+                to: outputURL,
+                preferredStyle: selectedStyle
+            ) {
+                recommendation = result.recommendation
+                clusters = result.clusters
+                exportURL = result.exportURL
+                generationStage = .finished
+                return
+            }
 
         generationStage = .exporting
         exportURL = try? await VideoExportService().export(plan: currentPlan, assets: currentAssets, to: outputURL)

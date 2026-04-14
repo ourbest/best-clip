@@ -4,6 +4,7 @@ struct ResultView: View {
     let exportURL: URL?
     let plan: CompositionPlan
     let summary: AssetSummary
+    let clusters: [RecommendationCluster]
     let onDone: () -> Void
     let onSaveToPhotos: () -> Void
     let saveStatus: String?
@@ -35,6 +36,10 @@ struct ResultView: View {
 
                 if let saveStatus {
                     statusCard(text: saveStatus, systemImage: "checkmark.seal.fill")
+                }
+
+                if !clusters.isEmpty {
+                    clusterCard
                 }
 
                 Button(action: onDone) {
@@ -123,5 +128,31 @@ struct ResultView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .background(Color.secondary.opacity(0.08), in: Capsule())
+    }
+
+    private var clusterCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("主题分组")
+                .font(.headline)
+
+            ForEach(clusters) { cluster in
+                HStack(alignment: .top, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(cluster.title)
+                            .font(.subheadline.bold())
+                        Text(cluster.reason)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Text("\(cluster.itemCount) 项")
+                        .font(.caption.bold())
+                        .foregroundStyle(Color.accentColor)
+                }
+                .padding(.vertical, 4)
+            }
+        }
+        .padding()
+        .background(Color.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 }

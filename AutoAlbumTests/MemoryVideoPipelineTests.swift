@@ -246,6 +246,96 @@ final class MemoryVideoPipelineTests: XCTestCase {
 
         XCTAssertEqual(result.recommendation.title, "周末的一次很长的标题需要")
     }
+
+    func testClustersHighlightsByKeywordAndFallsBackToThemeGroup() async throws {
+        let assets = [
+            MediaAssetSnapshot(
+                id: "photo-1",
+                kind: .photo,
+                timestamp: Date(timeIntervalSince1970: 1_700_740_000),
+                duration: nil,
+                faces: 2,
+                scene: "park",
+                sharpness: 0.92,
+                stability: 0.9,
+                ocrText: nil,
+                speechText: nil
+            ),
+            MediaAssetSnapshot(
+                id: "video-2",
+                kind: .video,
+                timestamp: Date(timeIntervalSince1970: 1_700_740_030),
+                duration: 10.0,
+                faces: 1,
+                scene: "street",
+                sharpness: 0.84,
+                stability: 0.8,
+                motion: 0.18,
+                ocrText: nil,
+                speechText: "hello"
+            ),
+            MediaAssetSnapshot(
+                id: "photo-3",
+                kind: .photo,
+                timestamp: Date(timeIntervalSince1970: 1_700_740_060),
+                duration: nil,
+                faces: 0,
+                scene: "city",
+                sharpness: 0.7,
+                stability: 0.66,
+                ocrText: nil,
+                speechText: nil
+            )
+        ]
+
+        let client = ClusteringRecommendationClient()
+        let exporter = FakeExportService()
+        let pipeline = MemoryVideoPipeline(
+            recommendationClient: client,
+            exportService: exporter
+        )
+
+        let destinationURL = FileManager.default.temporaryDirectory.appendingPathComponent("clustered.mov")
+        let result = try await pipeline.generate(from: assets, to: destinationURL)
+
+        XCTAssertEqual(result.clusters.first?.title, "开头")
+        XCTAssertTrue(result.clusters.contains { $0.title == "承接" })
+        XCTAssertTrue(result.clusters.contains { $0.title == "周末日常" })
+    }
+
+    func testRecommendationClustererUsesKeywordBucketsBeforeThemeFallback() {
+        let clusterer = RecommendationClusterer()
+        let summary = AssetSummary(
+            recommendedTheme: "周末日常",
+            highlightItems: [
+                .init(id: "photo-1", priority: 1, reason: "适合开头"),
+                .init(id: "video-2", priority: 2, reason: "适合过渡"),
+                .init(id: "photo-3", priority: 3, reason: "无明显关键词")
+            ]
+        )
+
+        let clusters = clusterer.cluster(
+            highlights: [
+                .init(id: "photo-1", priority: 1, reason: "适合开头"),
+                .init(id: "video-2", priority: 2, reason: "适合过渡"),
+                .init(id: "photo-3", priority: 3, reason: "无明显关键词")
+            ],
+            summary: summary
+        )
+
+        XCTAssertEqual(clusters.first?.title, "开头")
+        XCTAssertTrue(clusters.contains { $0.title == "承接" })
+
+        let fallbackClusters = clusterer.cluster(
+            highlights: [
+                .init(id: "photo-9", priority: 1, reason: "普通素材")
+            ],
+            summary: AssetSummary(recommendedTheme: "朋友聚会", highlightItems: [])
+        )
+
+        XCTAssertEqual(fallbackClusters.first?.title, "朋友聚会")
+        XCTAssertEqual(fallbackClusters.first?.itemIDs, ["photo-9"])
+    }
 }
 
 private final class FakeRecommendationClient: RecommendationProviding {
@@ -301,6 +391,25 @@ private final class LongTitleRecommendationClient: RecommendationProviding {
             highlightItems: summary.highlightItems.map {
                 .init(id: $0.id, priority: $0.priority, reason: $0.reason)
             },
+            musicStyle: "轻快温暖",
+            transitionStyle: "柔和",
+            sharingCopy: "把这些片段留作回忆。"
+        )
+    }
+}
+
+private final class ClusteringRecommendationClient: RecommendationProviding {
+    func requestRecommendation(for summary: AssetSummary) async throws -> LLMRecommendation {
+        LLMRecommendation(
+            theme: summary.recommendedTheme,
+            recommendedStyle: .lifeLog,
+            title: "周末日常",
+            subtitle: "轻松记录",
+            highlightItems: [
+                .init(id: "photo-1", priority: 1, reason: "适合开头"),
+                .init(id: "video-2", priority: 2, reason: "适合作为承接镜头"),
+                .init(id: "photo-3", priority: 3, reason: "适合收尾")
+            ],
             musicStyle: "轻快温暖",
             transitionStyle: "柔和",
             sharingCopy: "把这些片段留作回忆。"
