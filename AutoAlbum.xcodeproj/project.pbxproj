@@ -1,0 +1,7 @@
+// !$*UTF8*$!
+//
+// Placeholder Xcode project file.
+//
+// The actual Xcode project should be generated in Xcode on macOS.
+// This placeholder exists so the repository has the requested path.
+//
