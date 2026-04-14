@@ -88,7 +88,7 @@ final class PhotosPickerAssetImporter: MediaSelectionImporting {
         let analysis = try analyzer.analyze(image: frameImage)
         let persistedURL = persistVideo(at: tempURL)
         let previewURL = persistPreviewImage(from: frameImage, namePrefix: "video")
-        let duration = CMTimeGetSeconds(asset.duration)
+        let duration = CMTimeGetSeconds(try await asset.load(.duration))
 
         return MediaAssetSnapshot(
             id: UUID().uuidString,
@@ -139,7 +139,7 @@ final class PhotosPickerAssetImporter: MediaSelectionImporting {
         let analysis = try analyzer.analyze(image: frameImage)
         let persistedURL = persistVideo(at: fileURL)
         let previewURL = persistPreviewImage(from: frameImage, namePrefix: "video")
-        let duration = CMTimeGetSeconds(asset.duration)
+        let duration = CMTimeGetSeconds(try await asset.load(.duration))
 
         return MediaAssetSnapshot(
             id: UUID().uuidString,

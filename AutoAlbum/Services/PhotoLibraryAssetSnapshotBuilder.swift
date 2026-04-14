@@ -83,7 +83,7 @@ final class PhotoLibraryAssetSnapshotBuilder: MediaAssetSnapshotProviding {
         } else {
             sourceURL = try await persistVideoAsset(avAsset, asset: asset)
         }
-        let duration = CMTimeGetSeconds(avAsset.duration)
+        let duration = CMTimeGetSeconds(try await avAsset.load(.duration))
         let frameImage = try await representativeFrame(from: avAsset)
         let analysis = try analyzer.analyze(image: frameImage)
 
