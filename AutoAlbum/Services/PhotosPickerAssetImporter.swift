@@ -49,6 +49,11 @@ final class PhotosPickerAssetImporter: MediaSelectionImporting {
     }
 
     private func snapshot(from data: Data) throws -> MediaAssetSnapshot {
+        // Detect if data is video by checking magic bytes (ftyp = MP4/MOV)
+        if isVideoData(data) {
+            return try snapshotForVideoData(data)
+        }
+
         let analysis = try analyzer.analyze(imageData: data)
         let fileURL = persist(data: data, suggestedExtension: "jpg")
         let previewURL = persistPreviewImage(from: data, namePrefix: "photo")
@@ -66,6 +71,33 @@ final class PhotosPickerAssetImporter: MediaSelectionImporting {
             speechText: nil,
             sourceURL: fileURL,
             previewURL: previewURL
+        )
+    }
+
+    private func isVideoData(_ data: Data) -> Bool {
+        guard data.count >= 12 else { return false }
+        // Check for 'ftyp' at offset 4 (MP4/MOV format)
+        let bytes = [UInt8](data.prefix(12))
+        return bytes[4] == 0x66 && bytes[5] == 0x74 && bytes[6] == 0x79 && bytes[7] == 0x70
+    }
+
+    private func snapshotForVideoData(_ data: Data) throws -> MediaAssetSnapshot {
+        let fileURL = persist(data: data, suggestedExtension: "mov")
+        // For video data passed directly, create a simple video snapshot
+        // The actual video analysis would require loading the AVAsset
+        return MediaAssetSnapshot(
+            id: UUID().uuidString,
+            kind: .video,
+            timestamp: Date(),
+            duration: nil,
+            faces: 0,
+            scene: "视频",
+            sharpness: 0.7,
+            stability: 0.7,
+            ocrText: nil,
+            speechText: nil,
+            sourceURL: fileURL,
+            previewURL: nil
         )
     }
 
