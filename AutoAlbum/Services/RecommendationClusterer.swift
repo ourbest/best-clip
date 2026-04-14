@@ -34,7 +34,9 @@ struct RecommendationClusterer {
         }
 
         if !clusters.isEmpty {
-            return clusters
+            return clusters.sorted { lhs, rhs in
+                rank(for: lhs.id, in: priorityOrder) < rank(for: rhs.id, in: priorityOrder)
+            }
         }
 
         let fallbackIDs = orderedHighlights.prefix(3).map(\.id)
@@ -98,5 +100,9 @@ struct RecommendationClusterer {
 
     private func containsAny(_ text: String, keywords: [String]) -> Bool {
         keywords.contains { text.contains($0) }
+    }
+
+    private func rank(for key: String, in order: [String]) -> Int {
+        order.firstIndex(of: key) ?? Int.max
     }
 }

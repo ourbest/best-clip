@@ -132,24 +132,62 @@ struct ResultView: View {
 
     private var clusterCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("主题分组")
-                .font(.headline)
+            HStack(alignment: .firstTextBaseline) {
+                Text("主题分组")
+                    .font(.headline)
+                Spacer()
+                Text("\(clusters.count) 组")
+                    .font(.caption.bold())
+                    .foregroundStyle(Color.accentColor)
+            }
 
-            ForEach(clusters) { cluster in
-                HStack(alignment: .top, spacing: 10) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(cluster.title)
-                            .font(.subheadline.bold())
-                        Text(cluster.reason)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
+            Text("按推荐高光和内容语义自动分组，优先展示最核心的主题。")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+
+            if let primary = clusters.first {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(primary.title)
+                                .font(.subheadline.bold())
+                            Text(primary.reason)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Text("\(primary.itemCount) 项")
+                            .font(.caption.bold())
+                            .foregroundStyle(Color.accentColor)
                     }
-                    Spacer()
-                    Text("\(cluster.itemCount) 项")
-                        .font(.caption.bold())
-                        .foregroundStyle(Color.accentColor)
+
+                    Text("主分组覆盖 \(primary.itemCount) 个高光线索")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
-                .padding(.vertical, 4)
+                .padding()
+                .background(Color.accentColor.opacity(0.10), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            }
+
+            if clusters.count > 1 {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(clusters.dropFirst()) { cluster in
+                        HStack(alignment: .top, spacing: 10) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(cluster.title)
+                                    .font(.subheadline.bold())
+                                Text(cluster.reason)
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Text("\(cluster.itemCount) 项")
+                                .font(.caption.bold())
+                                .foregroundStyle(Color.accentColor)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
             }
         }
         .padding()
