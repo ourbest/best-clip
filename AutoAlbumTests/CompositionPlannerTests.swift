@@ -267,4 +267,50 @@ final class CompositionPlannerTests: XCTestCase {
         XCTAssertEqual(CMTimeGetSeconds(range.start), 4.0, accuracy: 0.0001)
         XCTAssertEqual(CMTimeGetSeconds(range.duration), 5.0, accuracy: 0.0001)
     }
+
+    func testVideoSegmentScorerPrefersSingleSectionForContentRichVideos() {
+        let scorer = VideoSegmentScorer()
+        let asset = MediaAssetSnapshot(
+            id: "content-rich",
+            kind: .video,
+            timestamp: Date(timeIntervalSince1970: 1_700_500_000),
+            duration: 11.0,
+            faces: 3,
+            scene: "restaurant",
+            sharpness: 0.9,
+            stability: 0.86,
+            motion: 0.18,
+            ocrText: "happy birthday",
+            speechText: "cheers",
+            sourceURL: nil
+        )
+
+        let sections = scorer.sections(for: asset, isLast: false)
+
+        XCTAssertEqual(sections.count, 1)
+        XCTAssertGreaterThan(sections[0].endSeconds - sections[0].startSeconds, 2.2)
+    }
+
+    func testVideoSegmentScorerSplitsMotionHeavyVideos() {
+        let scorer = VideoSegmentScorer()
+        let asset = MediaAssetSnapshot(
+            id: "motion-heavy",
+            kind: .video,
+            timestamp: Date(timeIntervalSince1970: 1_700_500_030),
+            duration: 18.0,
+            faces: 0,
+            scene: "city",
+            sharpness: 0.7,
+            stability: 0.25,
+            motion: 0.88,
+            ocrText: nil,
+            speechText: nil,
+            sourceURL: nil
+        )
+
+        let sections = scorer.sections(for: asset, isLast: false)
+
+        XCTAssertEqual(sections.count, 3)
+        XCTAssertLessThan(sections[0].endSeconds - sections[0].startSeconds, 4.5)
+    }
 }
