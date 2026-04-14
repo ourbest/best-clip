@@ -318,10 +318,6 @@
 						ProvisioningStyle = Automatic;
 						TestTargetID = BCFCD5CDC8702F679248CF22;
 					};
-					BCFCD5CDC8702F679248CF22 = {
-						DevelopmentTeam = "";
-						ProvisioningStyle = Automatic;
-					};
 					DE0C3C3DE97FF0C3D0F08127 = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
@@ -458,8 +454,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AutoAlbum/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -599,8 +593,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AutoAlbum/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
