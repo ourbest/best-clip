@@ -114,4 +114,53 @@ final class CompositionPlannerTests: XCTestCase {
         XCTAssertEqual(plan.sections.first?.assetID, "photo-1")
         XCTAssertEqual(plan.sections.last?.assetID, "video-2")
     }
+
+    func testGivesLongerDurationToStableVideoThanShakyVideo() {
+        let recommendation = LLMRecommendation(
+            theme: "周末日常",
+            recommendedStyle: .lifeLog,
+            title: "周末碎片",
+            subtitle: "把普通的一天，剪成值得回看的回忆",
+            highlightItems: [
+                .init(id: "stable", priority: 1, reason: "适合承接"),
+                .init(id: "shaky", priority: 2, reason: "适合过渡")
+            ],
+            musicStyle: "轻快温暖",
+            transitionStyle: "柔和",
+            sharingCopy: "周末的这些小片段，拼起来就是我喜欢的生活。"
+        )
+
+        let stable = MediaAssetSnapshot(
+            id: "stable",
+            kind: .video,
+            timestamp: Date(timeIntervalSince1970: 1_700_100_000),
+            duration: 8.0,
+            faces: 1,
+            scene: "park",
+            sharpness: 0.88,
+            stability: 0.92,
+            motion: 0.10,
+            ocrText: nil,
+            speechText: nil,
+            sourceURL: nil
+        )
+        let shaky = MediaAssetSnapshot(
+            id: "shaky",
+            kind: .video,
+            timestamp: Date(timeIntervalSince1970: 1_700_100_030),
+            duration: 8.0,
+            faces: 1,
+            scene: "street",
+            sharpness: 0.88,
+            stability: 0.36,
+            motion: 0.82,
+            ocrText: nil,
+            speechText: nil,
+            sourceURL: nil
+        )
+
+        let plan = CompositionPlanner().buildPlan(recommendation: recommendation, assets: [stable, shaky])
+
+        XCTAssertGreaterThan(plan.sections[0].endSeconds, plan.sections[1].endSeconds)
+    }
 }

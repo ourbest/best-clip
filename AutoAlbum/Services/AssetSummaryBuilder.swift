@@ -35,6 +35,9 @@ struct AssetSummaryBuilder {
 
         if asset.kind == .photo {
             value += 0.05
+        } else {
+            let motion = min(max(asset.motion ?? max(0.0, 1.0 - asset.stability), 0.0), 1.0)
+            value += (1.0 - motion) * 0.12
         }
 
         if asset.ocrText != nil {
@@ -51,6 +54,10 @@ struct AssetSummaryBuilder {
     private func reason(for asset: MediaAssetSnapshot) -> String {
         if asset.kind == .photo {
             return "清晰稳定，适合作为开头"
+        }
+
+        if let motion = asset.motion, motion <= 0.25 {
+            return "画面稳定，适合作为承接镜头"
         }
 
         return "有动作感，适合作为过渡"

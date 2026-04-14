@@ -54,6 +54,7 @@ final class PhotoLibraryAssetSnapshotBuilder: MediaAssetSnapshotProviding {
                 scene: "未支持媒体",
                 sharpness: 0.5,
                 stability: 0.5,
+                motion: nil,
                 ocrText: nil,
                 speechText: nil,
                 sourceURL: nil
@@ -75,6 +76,7 @@ final class PhotoLibraryAssetSnapshotBuilder: MediaAssetSnapshotProviding {
             scene: "照片",
             sharpness: analysis.sharpness,
             stability: min(1.0, 0.65 + analysis.sharpness * 0.3),
+            motion: nil,
             ocrText: analysis.ocrText,
             speechText: nil,
             sourceURL: sourceURL
@@ -103,6 +105,7 @@ final class PhotoLibraryAssetSnapshotBuilder: MediaAssetSnapshotProviding {
             scene: "视频",
             sharpness: analysis.sharpness,
             stability: analysis.stability,
+            motion: analysis.motion,
             ocrText: analysis.ocrText,
             speechText: nil,
             sourceURL: sourceURL,
@@ -210,7 +213,7 @@ final class PhotoLibraryAssetSnapshotBuilder: MediaAssetSnapshotProviding {
 
     private func persistPreviewImage(from image: CGImage, asset: PHAsset) -> URL? {
         let thumbnail = UIImage(cgImage: image)
-        let targetSize = thumbnail.thumbnailSize(maxDimension: 640)
+        let targetSize = scaledPreviewSize(for: thumbnail, maxDimension: 640)
         let renderer = UIGraphicsImageRenderer(size: targetSize)
         let rendered = renderer.image { _ in
             thumbnail.draw(in: CGRect(origin: .zero, size: targetSize))
@@ -228,6 +231,16 @@ final class PhotoLibraryAssetSnapshotBuilder: MediaAssetSnapshotProviding {
         try? FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true, attributes: nil)
         try? data.write(to: fileURL, options: .atomic)
         return fileURL
+    }
+
+    private func scaledPreviewSize(for image: UIImage, maxDimension: CGFloat) -> CGSize {
+        let longestSide = max(image.size.width, image.size.height)
+        guard longestSide > maxDimension, longestSide > 0 else {
+            return image.size
+        }
+
+        let scale = maxDimension / longestSide
+        return CGSize(width: image.size.width * scale, height: image.size.height * scale)
     }
 
     private func temporaryURL(for asset: PHAsset, extension fileExtension: String) -> URL {

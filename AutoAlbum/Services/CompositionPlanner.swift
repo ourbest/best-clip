@@ -40,7 +40,12 @@ struct CompositionPlanner {
         case .photo:
             baseDuration = index == 0 ? 2.8 : 2.4
         case .video:
-            baseDuration = min(asset.duration ?? 4.0, 4.5)
+            let duration = min(asset.duration ?? 4.0, 5.0)
+            let motion = min(max(asset.motion ?? max(0.0, 1.0 - asset.stability), 0.0), 1.0)
+            let stabilityBonus = max(0.0, (asset.stability - 0.5) * 1.2)
+            let contentBonus = asset.speechText != nil ? 0.3 : (asset.ocrText != nil ? 0.15 : 0.0)
+            let motionPenalty = motion * 0.9
+            baseDuration = max(1.8, min(duration + stabilityBonus + contentBonus - motionPenalty, 5.0))
         }
 
         if index == totalCount - 1 {

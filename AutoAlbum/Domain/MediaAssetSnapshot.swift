@@ -14,6 +14,7 @@ struct MediaAssetSnapshot: Identifiable, Codable, Equatable {
     let scene: String
     let sharpness: Double
     let stability: Double
+    let motion: Double?
     let ocrText: String?
     let speechText: String?
     let sourceURL: URL?
@@ -28,6 +29,7 @@ struct MediaAssetSnapshot: Identifiable, Codable, Equatable {
         scene: String,
         sharpness: Double,
         stability: Double,
+        motion: Double? = nil,
         ocrText: String?,
         speechText: String?,
         sourceURL: URL? = nil,
@@ -41,6 +43,7 @@ struct MediaAssetSnapshot: Identifiable, Codable, Equatable {
         self.scene = scene
         self.sharpness = sharpness
         self.stability = stability
+        self.motion = motion
         self.ocrText = ocrText
         self.speechText = speechText
         self.sourceURL = sourceURL
