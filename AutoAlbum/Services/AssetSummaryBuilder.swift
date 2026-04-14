@@ -1,8 +1,20 @@
 import Foundation
 
 struct AssetSummaryBuilder {
+    private let scorer: AssetQualityScorer
+    private let selectionFilter: AssetSelectionFilter
+
+    init(
+        scorer: AssetQualityScorer = AssetQualityScorer(),
+        selectionFilter: AssetSelectionFilter = AssetSelectionFilter()
+    ) {
+        self.scorer = scorer
+        self.selectionFilter = selectionFilter
+    }
+
     func build(from assets: [MediaAssetSnapshot]) -> AssetSummary {
-        let orderedAssets = assets
+        let eligibleAssets = selectionFilter.filter(assets)
+        let orderedAssets = eligibleAssets
             .map { asset in
                 (asset: asset, score: score(for: asset))
             }
@@ -25,30 +37,13 @@ struct AssetSummaryBuilder {
         }
 
         return AssetSummary(
-            recommendedTheme: recommendedTheme(for: assets),
+            recommendedTheme: recommendedTheme(for: eligibleAssets),
             highlightItems: highlightItems
         )
     }
 
     private func score(for asset: MediaAssetSnapshot) -> Double {
-        var value = asset.sharpness * 0.4 + asset.stability * 0.4 + Double(asset.faces) * 0.1
-
-        if asset.kind == .photo {
-            value += 0.05
-        } else {
-            let motion = min(max(asset.motion ?? max(0.0, 1.0 - asset.stability), 0.0), 1.0)
-            value += (1.0 - motion) * 0.12
-        }
-
-        if asset.ocrText != nil {
-            value += 0.03
-        }
-
-        if asset.speechText != nil {
-            value += 0.02
-        }
-
-        return value
+        scorer.score(for: asset)
     }
 
     private func reason(for asset: MediaAssetSnapshot) -> String {

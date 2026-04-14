@@ -121,13 +121,15 @@ final class GenerationFlowViewModel: ObservableObject {
     }
 
     func summary() -> AssetSummary {
-        AssetSummaryBuilder().build(from: selectedAssets.isEmpty ? availableAssets : selectedAssets)
+        let assets = effectiveAssets()
+        return AssetSummaryBuilder().build(from: assets)
     }
 
     func plan() -> CompositionPlan {
+        let assets = effectiveAssets()
         CompositionPlanner().buildPlan(
             recommendation: effectiveRecommendation,
-            assets: selectedAssets.isEmpty ? availableAssets : selectedAssets
+            assets: assets
         )
     }
 
@@ -171,8 +173,11 @@ final class GenerationFlowViewModel: ObservableObject {
 
     func generatePreviewExportAsync() async {
         let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent("memory-video.mov")
-        let currentPlan = plan()
-        let currentAssets = selectedAssets.isEmpty ? availableAssets : selectedAssets
+        let currentAssets = effectiveAssets()
+        let currentPlan = CompositionPlanner().buildPlan(
+            recommendation: effectiveRecommendation,
+            assets: currentAssets
+        )
 
         isGenerating = true
         generationStage = .preparing
@@ -230,6 +235,11 @@ final class GenerationFlowViewModel: ObservableObject {
             transitionStyle: recommendation.transitionStyle,
             sharingCopy: recommendation.sharingCopy
         )
+    }
+
+    private func effectiveAssets() -> [MediaAssetSnapshot] {
+        let sourceAssets = selectedAssets.isEmpty ? availableAssets : selectedAssets
+        return AssetSelectionFilter().filter(sourceAssets)
     }
 
     private static func makeStubExportFile(at url: URL) -> URL? {

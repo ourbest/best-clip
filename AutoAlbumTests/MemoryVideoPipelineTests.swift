@@ -101,6 +101,49 @@ final class MemoryVideoPipelineTests: XCTestCase {
         XCTAssertNotNil(snapshot.previewURL)
         XCTAssertTrue(FileManager.default.fileExists(atPath: snapshot.previewURL?.path ?? ""))
     }
+
+    func testFiltersLowQualityAssetsBeforeGeneratingPlan() async throws {
+        let goodPhoto = MediaAssetSnapshot(
+            id: "good-photo",
+            kind: .photo,
+            timestamp: Date(timeIntervalSince1970: 1_700_700_000),
+            duration: nil,
+            faces: 2,
+            scene: "restaurant",
+            sharpness: 0.94,
+            stability: 0.9,
+            ocrText: "birthday",
+            speechText: nil
+        )
+
+        let weakVideo = MediaAssetSnapshot(
+            id: "weak-video",
+            kind: .video,
+            timestamp: Date(timeIntervalSince1970: 1_700_700_030),
+            duration: 14.0,
+            faces: 0,
+            scene: "street",
+            sharpness: 0.34,
+            stability: 0.22,
+            motion: 0.91,
+            ocrText: nil,
+            speechText: nil
+        )
+
+        let client = FakeRecommendationClient()
+        let exporter = FakeExportService()
+        let pipeline = MemoryVideoPipeline(
+            recommendationClient: client,
+            exportService: exporter
+        )
+
+        let destinationURL = FileManager.default.temporaryDirectory.appendingPathComponent("filtered.mov")
+        let result = try await pipeline.generate(from: [goodPhoto, weakVideo], to: destinationURL)
+
+        XCTAssertEqual(result.summary.highlightItems.first?.id, "good-photo")
+        XCTAssertEqual(exporter.exportedAssets.first?.map(\.id), ["good-photo"])
+        XCTAssertFalse(result.plan.sections.contains(where: { $0.assetID == "weak-video" }))
+    }
 }
 
 private final class FakeRecommendationClient: RecommendationProviding {
