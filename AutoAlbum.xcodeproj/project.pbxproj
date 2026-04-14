@@ -100,7 +100,7 @@
 		7F8684206AA9DF8326C885FC /* LLMRecommendation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMRecommendation.swift; sourceTree = "<group>"; };
 		8030600CA1923F4FEF7C8078 /* ThumbnailCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailCache.swift; sourceTree = "<group>"; };
 		83CF678484C691D74CFA9B88 /* MemoryVideoPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryVideoPipeline.swift; sourceTree = "<group>"; };
-		85523EADB070A64DD307C2BE /* AutoAlbum.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AutoAlbum.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		85523EADB070A64DD307C2BE /* AutoAlbum.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AutoAlbum.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		86F6058BBAB64EEF1804E558 /* GenerationProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerationProgressView.swift; sourceTree = "<group>"; };
 		8AA0694BCE7646B08A286979 /* StyleRecommendationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StyleRecommendationView.swift; sourceTree = "<group>"; };
 		8B0EC0F582BDE7C3EDBCC0AF /* ThumbnailPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailPreviewView.swift; sourceTree = "<group>"; };
@@ -454,6 +454,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = RMBY9EXYRL;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AutoAlbum/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -593,6 +594,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = RMBY9EXYRL;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AutoAlbum/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

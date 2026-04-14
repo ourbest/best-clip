@@ -42,16 +42,16 @@ final class PhotosPickerAssetImporter: MediaSelectionImporting {
         }
 
         if let data = try await item.loadData() {
-            return try snapshot(from: data)
+            return try await snapshot(from: data)
         }
 
         throw ImportError.unreadableItem
     }
 
-    private func snapshot(from data: Data) throws -> MediaAssetSnapshot {
+    private func snapshot(from data: Data) async throws -> MediaAssetSnapshot {
         // Detect if data is video by checking magic bytes (ftyp = MP4/MOV)
         if isVideoData(data) {
-            return try snapshotForVideoData(data)
+            return try await snapshotForVideoData(data)
         }
 
         let analysis = try analyzer.analyze(imageData: data)
@@ -81,23 +81,28 @@ final class PhotosPickerAssetImporter: MediaSelectionImporting {
         return bytes[4] == 0x66 && bytes[5] == 0x74 && bytes[6] == 0x79 && bytes[7] == 0x70
     }
 
-    private func snapshotForVideoData(_ data: Data) throws -> MediaAssetSnapshot {
-        let fileURL = persist(data: data, suggestedExtension: "mov")
-        // For video data passed directly, create a simple video snapshot
-        // The actual video analysis would require loading the AVAsset
+    private func snapshotForVideoData(_ data: Data) async throws -> MediaAssetSnapshot {
+        let tempURL = persist(data: data, suggestedExtension: "mov")
+        let asset = AVURLAsset(url: tempURL)
+        let frameImage = try await representativeFrame(from: asset)
+        let analysis = try analyzer.analyze(image: frameImage)
+        let persistedURL = persistVideo(at: tempURL)
+        let previewURL = persistPreviewImage(from: frameImage, namePrefix: "video")
+        let duration = CMTimeGetSeconds(asset.duration)
+
         return MediaAssetSnapshot(
             id: UUID().uuidString,
             kind: .video,
             timestamp: Date(),
-            duration: nil,
-            faces: 0,
+            duration: duration.isFinite ? duration : nil,
+            faces: analysis.faces,
             scene: "视频",
-            sharpness: 0.7,
-            stability: 0.7,
-            ocrText: nil,
+            sharpness: analysis.sharpness,
+            stability: min(1.0, 0.35 + min(max(duration, 0), 30) / 60.0 + analysis.sharpness * 0.15),
+            ocrText: analysis.ocrText,
             speechText: nil,
-            sourceURL: fileURL,
-            previewURL: nil
+            sourceURL: persistedURL,
+            previewURL: previewURL
         )
     }
 
