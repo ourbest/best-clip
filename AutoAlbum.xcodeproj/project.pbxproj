@@ -10,6 +10,7 @@
 		15CE19FDE5BD399467BAB302 /* KeychainSecretStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65EFF6358A169FF8765FA893 /* KeychainSecretStore.swift */; };
 		170F3E80E0D59B72AA026468 /* AutoAlbumApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46ED1066A95DFF291DB9568D /* AutoAlbumApp.swift */; };
 		196925463A899D25DDC2002F /* ThumbnailCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8030600CA1923F4FEF7C8078 /* ThumbnailCache.swift */; };
+		AF11A1A11A11A11A11A11A11 /* VideoAssetAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF11A1A11A11A11A11A11B11 /* VideoAssetAnalyzer.swift */; };
 		272D796FB3FA3AA7CFFA66A8 /* ResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC2A64608DBB9E5C246884ED /* ResultView.swift */; };
 		27F6EA15699745163D7277A4 /* VideoPhotoLibrarySaver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 203925D94811496459E8D8D3 /* VideoPhotoLibrarySaver.swift */; };
 		2BDA4ECA5A609790AAF3B0FF /* VideoExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22D46C8492949AAA0C2CAC5E /* VideoExportService.swift */; };
@@ -33,6 +34,7 @@
 		85269CFB265529932285CA33 /* MediaAssetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0494B4073680866527D4114E /* MediaAssetSnapshot.swift */; };
 		8FE7A3BFB0A7AF01F89E6EBC /* PhotoLibraryAssetSnapshotBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCB92ACBDDCC03215C0B446C /* PhotoLibraryAssetSnapshotBuilder.swift */; };
 		AB2BF52BE03C402B0C64A16B /* ThumbnailCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA7AEF6D80DEB053239A769 /* ThumbnailCacheTests.swift */; };
+		AF11A1A11A11A11A11A11A12 /* VideoAssetAnalyzerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF11A1A11A11A11A11A11B12 /* VideoAssetAnalyzerTests.swift */; };
 		B0D33EE7C9CEDFA9BD50B8D4 /* LLMClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 537D4C05695791190D6E23B7 /* LLMClientTests.swift */; };
 		B8B56D3DC48F1B5FB7185C81 /* CompositionPlannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 106038B2F6FC56D1E00A01A7 /* CompositionPlannerTests.swift */; };
 		BA47AA6A2DD7920E482FEF78 /* GenerationFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EE55C0D431D897D88E4648E /* GenerationFlowUITests.swift */; };
@@ -100,6 +102,7 @@
 		7F8684206AA9DF8326C885FC /* LLMRecommendation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMRecommendation.swift; sourceTree = "<group>"; };
 		8030600CA1923F4FEF7C8078 /* ThumbnailCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThumbnailCache.swift; sourceTree = "<group>"; };
 		83CF678484C691D74CFA9B88 /* MemoryVideoPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryVideoPipeline.swift; sourceTree = "<group>"; };
+		AF11A1A11A11A11A11A11B11 /* VideoAssetAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoAssetAnalyzer.swift; sourceTree = "<group>"; };
 		85523EADB070A64DD307C2BE /* AutoAlbum.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AutoAlbum.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		86F6058BBAB64EEF1804E558 /* GenerationProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerationProgressView.swift; sourceTree = "<group>"; };
 		8AA0694BCE7646B08A286979 /* StyleRecommendationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StyleRecommendationView.swift; sourceTree = "<group>"; };
@@ -119,6 +122,7 @@
 		E8D77D81D86C90DAFF38F0B2 /* RecommendationPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationPrompt.swift; sourceTree = "<group>"; };
 		EE454174D3E0AED67BC7BE61 /* AssetSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssetSummary.swift; sourceTree = "<group>"; };
 		F167ECF5AFEFCEC44B7CCE10 /* SecretStoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretStoring.swift; sourceTree = "<group>"; };
+		AF11A1A11A11A11A11A11B12 /* VideoAssetAnalyzerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoAssetAnalyzerTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -170,6 +174,7 @@
 				6CB8E17BD8B473F994771BD5 /* RecommendationMapperTests.swift */,
 				B0E1D0306DC91EA22B9A304F /* SettingsStoreTests.swift */,
 				0DA7AEF6D80DEB053239A769 /* ThumbnailCacheTests.swift */,
+				AF11A1A11A11A11A11A11B12 /* VideoAssetAnalyzerTests.swift */,
 			);
 			path = AutoAlbumTests;
 			sourceTree = "<group>";
@@ -190,6 +195,7 @@
 				E8D77D81D86C90DAFF38F0B2 /* RecommendationPrompt.swift */,
 				F167ECF5AFEFCEC44B7CCE10 /* SecretStoring.swift */,
 				8030600CA1923F4FEF7C8078 /* ThumbnailCache.swift */,
+				AF11A1A11A11A11A11A11B11 /* VideoAssetAnalyzer.swift */,
 				D4AB05A34639BCA9912D2FEF /* VideoComposer.swift */,
 				22D46C8492949AAA0C2CAC5E /* VideoExportService.swift */,
 				203925D94811496459E8D8D3 /* VideoPhotoLibrarySaver.swift */,
@@ -379,6 +385,7 @@
 				59BF4EEECCB698E07F9F307C /* SettingsView.swift in Sources */,
 				EEA34374B9461369FC9F55D6 /* StyleRecommendationView.swift in Sources */,
 				196925463A899D25DDC2002F /* ThumbnailCache.swift in Sources */,
+				AF11A1A11A11A11A11A11A11 /* VideoAssetAnalyzer.swift in Sources */,
 				C27069DF9AEA82457EE4B874 /* ThumbnailPreviewView.swift in Sources */,
 				F576E82C91D837866E4D2C0B /* VideoComposer.swift in Sources */,
 				2BDA4ECA5A609790AAF3B0FF /* VideoExportService.swift in Sources */,
@@ -400,6 +407,7 @@
 				316B036B6B3219CCE9911E15 /* RecommendationMapperTests.swift in Sources */,
 				F795C8D6068A6771E49ABB1A /* SettingsStoreTests.swift in Sources */,
 				AB2BF52BE03C402B0C64A16B /* ThumbnailCacheTests.swift in Sources */,
+				AF11A1A11A11A11A11A11A12 /* VideoAssetAnalyzerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

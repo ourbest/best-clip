@@ -16,9 +16,14 @@ protocol MediaSelectionImporting {
 
 final class PhotosPickerAssetImporter: MediaSelectionImporting {
     private let analyzer: MediaAssetAnalyzer
+    private let videoAnalyzer: VideoAnalyzing
 
-    init(analyzer: MediaAssetAnalyzer = MediaAssetAnalyzer()) {
+    init(
+        analyzer: MediaAssetAnalyzer = MediaAssetAnalyzer(),
+        videoAnalyzer: VideoAnalyzing? = nil
+    ) {
         self.analyzer = analyzer
+        self.videoAnalyzer = videoAnalyzer ?? VideoAssetAnalyzer(imageAnalyzer: analyzer)
     }
 
     func importSnapshots(from items: [any MediaSelectionItem]) async throws -> [MediaAssetSnapshot] {
@@ -84,8 +89,8 @@ final class PhotosPickerAssetImporter: MediaSelectionImporting {
     private func snapshotForVideoData(_ data: Data) async throws -> MediaAssetSnapshot {
         let tempURL = persist(data: data, suggestedExtension: "mov")
         let asset = AVURLAsset(url: tempURL)
+        let analysis = try await videoAnalyzer.analyze(video: asset)
         let frameImage = try await representativeFrame(from: asset)
-        let analysis = try analyzer.analyze(image: frameImage)
         let persistedURL = persistVideo(at: tempURL)
         let previewURL = persistPreviewImage(from: frameImage, namePrefix: "video")
         let duration = CMTimeGetSeconds(try await asset.load(.duration))
@@ -98,7 +103,7 @@ final class PhotosPickerAssetImporter: MediaSelectionImporting {
             faces: analysis.faces,
             scene: "视频",
             sharpness: analysis.sharpness,
-            stability: min(1.0, 0.35 + min(max(duration, 0), 30) / 60.0 + analysis.sharpness * 0.15),
+            stability: analysis.stability,
             ocrText: analysis.ocrText,
             speechText: nil,
             sourceURL: persistedURL,
@@ -135,8 +140,8 @@ final class PhotosPickerAssetImporter: MediaSelectionImporting {
 
     private func snapshotForVideo(fileURL: URL) async throws -> MediaAssetSnapshot {
         let asset = AVURLAsset(url: fileURL)
+        let analysis = try await videoAnalyzer.analyze(video: asset)
         let frameImage = try await representativeFrame(from: asset)
-        let analysis = try analyzer.analyze(image: frameImage)
         let persistedURL = persistVideo(at: fileURL)
         let previewURL = persistPreviewImage(from: frameImage, namePrefix: "video")
         let duration = CMTimeGetSeconds(try await asset.load(.duration))
@@ -149,7 +154,7 @@ final class PhotosPickerAssetImporter: MediaSelectionImporting {
             faces: analysis.faces,
             scene: "视频",
             sharpness: analysis.sharpness,
-            stability: min(1.0, 0.35 + min(max(duration, 0), 30) / 60.0 + analysis.sharpness * 0.15),
+            stability: analysis.stability,
             ocrText: analysis.ocrText,
             speechText: nil,
             sourceURL: persistedURL,

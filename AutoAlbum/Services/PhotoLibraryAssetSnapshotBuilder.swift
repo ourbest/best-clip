@@ -11,10 +11,16 @@ protocol MediaAssetSnapshotProviding {
 final class PhotoLibraryAssetSnapshotBuilder: MediaAssetSnapshotProviding {
     private let imageManager: PHImageManager
     private let analyzer: MediaAssetAnalyzer
+    private let videoAnalyzer: VideoAnalyzing
 
-    init(imageManager: PHImageManager = PHImageManager.default(), analyzer: MediaAssetAnalyzer = MediaAssetAnalyzer()) {
+    init(
+        imageManager: PHImageManager = PHImageManager.default(),
+        analyzer: MediaAssetAnalyzer = MediaAssetAnalyzer(),
+        videoAnalyzer: VideoAnalyzing? = nil
+    ) {
         self.imageManager = imageManager
         self.analyzer = analyzer
+        self.videoAnalyzer = videoAnalyzer ?? VideoAssetAnalyzer(imageAnalyzer: analyzer)
     }
 
     func snapshots(for assets: [PHAsset]) async throws -> [MediaAssetSnapshot] {
@@ -84,8 +90,9 @@ final class PhotoLibraryAssetSnapshotBuilder: MediaAssetSnapshotProviding {
             sourceURL = try await persistVideoAsset(avAsset, asset: asset)
         }
         let duration = CMTimeGetSeconds(try await avAsset.load(.duration))
-        let frameImage = try await representativeFrame(from: avAsset)
-        let analysis = try analyzer.analyze(image: frameImage)
+        let analysis = try await videoAnalyzer.analyze(video: avAsset)
+        let previewFrame = try await representativeFrame(from: avAsset)
+        let previewURL = persistPreviewImage(from: previewFrame, asset: asset)
 
         return MediaAssetSnapshot(
             id: asset.localIdentifier,
@@ -95,10 +102,11 @@ final class PhotoLibraryAssetSnapshotBuilder: MediaAssetSnapshotProviding {
             faces: analysis.faces,
             scene: "视频",
             sharpness: analysis.sharpness,
-            stability: min(1.0, 0.35 + min(max(duration, 0), 30) / 60.0 + analysis.sharpness * 0.15),
+            stability: analysis.stability,
             ocrText: analysis.ocrText,
             speechText: nil,
-            sourceURL: sourceURL
+            sourceURL: sourceURL,
+            previewURL: previewURL
         )
     }
 
@@ -198,6 +206,28 @@ final class PhotoLibraryAssetSnapshotBuilder: MediaAssetSnapshotProviding {
                 continuation.resume(throwing: error)
             }
         }
+    }
+
+    private func persistPreviewImage(from image: CGImage, asset: PHAsset) -> URL? {
+        let thumbnail = UIImage(cgImage: image)
+        let targetSize = thumbnail.thumbnailSize(maxDimension: 640)
+        let renderer = UIGraphicsImageRenderer(size: targetSize)
+        let rendered = renderer.image { _ in
+            thumbnail.draw(in: CGRect(origin: .zero, size: targetSize))
+        }
+
+        guard let data = rendered.jpegData(compressionQuality: 0.86) else {
+            return nil
+        }
+
+        let safeIdentifier = asset.localIdentifier.replacingOccurrences(of: "/", with: "_")
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("AutoAlbumSnapshots", isDirectory: true)
+            .appendingPathComponent("\(safeIdentifier)-preview.jpg")
+        let directoryURL = fileURL.deletingLastPathComponent()
+        try? FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true, attributes: nil)
+        try? data.write(to: fileURL, options: .atomic)
+        return fileURL
     }
 
     private func temporaryURL(for asset: PHAsset, extension fileExtension: String) -> URL {
