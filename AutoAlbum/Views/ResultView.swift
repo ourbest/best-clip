@@ -80,11 +80,12 @@ struct ResultView: View {
 
             HStack(spacing: 8) {
                 chip("\(plan.sections.count) 个片段")
+                chip(summary.recommendedTheme)
                 chip(plan.musicStyle)
                 chip(plan.transitionStyle)
             }
 
-            Text("已选择 \(summary.highlightItems.count) 个高光线索，输出为 \(plan.aspectRatio == .portrait9x16 ? "9:16 竖屏" : "自定义")。")
+            Text("已选择 \(summary.highlightItems.count) 个高光线索，分成 \(clusters.count) 组主题，输出为 \(plan.aspectRatio == .portrait9x16 ? "9:16 竖屏" : "自定义")。")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }

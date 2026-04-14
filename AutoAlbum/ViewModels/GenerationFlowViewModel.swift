@@ -190,17 +190,17 @@ final class GenerationFlowViewModel: ObservableObject {
             return
         }
 
-            if let result = try? await pipeline.generate(
-                from: currentAssets,
-                to: outputURL,
-                preferredStyle: selectedStyle
-            ) {
-                recommendation = result.recommendation
-                clusters = result.clusters
-                exportURL = result.exportURL
-                generationStage = .finished
-                return
-            }
+        if let result = try? await pipeline.generate(
+            from: currentAssets,
+            to: outputURL,
+            preferredStyle: selectedStyle
+        ) {
+            recommendation = result.recommendation
+            clusters = result.clusters
+            exportURL = result.exportURL
+            generationStage = .finished
+            return
+        }
 
         generationStage = .exporting
         exportURL = try? await VideoExportService().export(plan: currentPlan, assets: currentAssets, to: outputURL)
