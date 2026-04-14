@@ -313,4 +313,76 @@ final class CompositionPlannerTests: XCTestCase {
         XCTAssertEqual(sections.count, 3)
         XCTAssertLessThan(sections[0].endSeconds - sections[0].startSeconds, 4.5)
     }
+
+    func testMotionPolicyPrefersFewerSegmentsForContentRichVideos() {
+        let policy = MotionSegmentPolicy()
+        let contentRich = MediaAssetSnapshot(
+            id: "content-rich",
+            kind: .video,
+            timestamp: Date(timeIntervalSince1970: 1_700_600_000),
+            duration: 14.0,
+            faces: 3,
+            scene: "restaurant",
+            sharpness: 0.9,
+            stability: 0.86,
+            motion: 0.18,
+            ocrText: "happy birthday",
+            speechText: "cheers",
+            sourceURL: nil
+        )
+        let motionOnly = MediaAssetSnapshot(
+            id: "motion-only",
+            kind: .video,
+            timestamp: Date(timeIntervalSince1970: 1_700_600_030),
+            duration: 14.0,
+            faces: 0,
+            scene: "street",
+            sharpness: 0.7,
+            stability: 0.34,
+            motion: 0.82,
+            ocrText: nil,
+            speechText: nil,
+            sourceURL: nil
+        )
+
+        XCTAssertLessThanOrEqual(
+            policy.segmentCount(for: contentRich, sourceDuration: 14.0, contentScore: ContentSegmentPolicy().contentScore(for: contentRich)),
+            policy.segmentCount(for: motionOnly, sourceDuration: 14.0, contentScore: ContentSegmentPolicy().contentScore(for: motionOnly))
+        )
+    }
+
+    func testContentPolicyIncreasesDurationForTextAndFaces() {
+        let policy = ContentSegmentPolicy()
+        let rich = MediaAssetSnapshot(
+            id: "rich",
+            kind: .video,
+            timestamp: Date(timeIntervalSince1970: 1_700_600_060),
+            duration: 10.0,
+            faces: 3,
+            scene: "dinner",
+            sharpness: 0.9,
+            stability: 0.88,
+            motion: 0.16,
+            ocrText: "happy birthday",
+            speechText: "cheers",
+            sourceURL: nil
+        )
+        let sparse = MediaAssetSnapshot(
+            id: "sparse",
+            kind: .video,
+            timestamp: Date(timeIntervalSince1970: 1_700_600_090),
+            duration: 10.0,
+            faces: 0,
+            scene: "street",
+            sharpness: 0.9,
+            stability: 0.88,
+            motion: 0.16,
+            ocrText: nil,
+            speechText: nil,
+            sourceURL: nil
+        )
+
+        XCTAssertGreaterThan(policy.contentScore(for: rich), policy.contentScore(for: sparse))
+        XCTAssertGreaterThan(policy.minimumSegmentDuration(for: rich), policy.minimumSegmentDuration(for: sparse))
+    }
 }
