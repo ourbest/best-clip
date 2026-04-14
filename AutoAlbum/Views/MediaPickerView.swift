@@ -1,6 +1,16 @@
 import PhotosUI
 import SwiftUI
 
+extension PhotosPickerItem: MediaSelectionItem {
+    func loadFileURL() async throws -> URL? {
+        try await loadTransferable(type: URL.self)
+    }
+
+    func loadData() async throws -> Data? {
+        try await loadTransferable(type: Data.self)
+    }
+}
+
 struct MediaPickerView: View {
     let assets: [MediaAssetSnapshot]
     @Binding var selectedAssetIDs: Set<String>
@@ -122,7 +132,7 @@ struct MediaPickerView: View {
     private func statusBanner(title: String, subtitle: String, isError: Bool = false) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: isError ? "exclamationmark.triangle.fill" : "arrow.down.circle.fill")
-                .foregroundStyle(isError ? .red : .accent)
+                .foregroundStyle(isError ? .red : Color.accentColor)
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.headline)
@@ -140,7 +150,7 @@ struct MediaPickerView: View {
         VStack(alignment: .leading, spacing: 10) {
             Image(systemName: "photo.stack")
                 .font(.system(size: 28, weight: .semibold))
-                .foregroundStyle(.accent)
+                .foregroundStyle(Color.accentColor)
             Text("还没有导入素材")
                 .font(.headline)
             Text("先从系统相册导入照片和视频，再继续风格推荐。")
@@ -171,7 +181,7 @@ struct MediaPickerView: View {
                 Spacer()
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.accent)
+                        .foregroundStyle(Color.accentColor)
                 }
             }
 

@@ -77,7 +77,12 @@ final class PhotoLibraryAssetSnapshotBuilder: MediaAssetSnapshotProviding {
 
     private func snapshotForVideo(_ asset: PHAsset) async throws -> MediaAssetSnapshot {
         let avAsset = try await loadVideoAsset(for: asset)
-        let sourceURL = (avAsset as? AVURLAsset)?.url ?? try await persistVideoAsset(avAsset, asset: asset)
+        let sourceURL: URL
+        if let url = (avAsset as? AVURLAsset)?.url {
+            sourceURL = url
+        } else {
+            sourceURL = try await persistVideoAsset(avAsset, asset: asset)
+        }
         let duration = CMTimeGetSeconds(avAsset.duration)
         let frameImage = try await representativeFrame(from: avAsset)
         let analysis = try analyzer.analyze(image: frameImage)

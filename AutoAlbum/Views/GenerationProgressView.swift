@@ -88,20 +88,20 @@ struct GenerationProgressView: View {
     private func stepColor(for title: String) -> Color {
         switch title {
         case "分析素材":
-            return stage == .idle ? .secondary : .accent
+            return stage == .idle ? .secondary : Color.accentColor
         case "调用推荐":
             switch stage {
             case .idle:
                 return .secondary
             case .preparing:
-                return .accent
+                return Color.accentColor
             default:
-                return .accent
+                return Color.accentColor
             }
         case "导出视频":
             switch stage {
             case .exporting, .finished:
-                return .accent
+                return Color.accentColor
             default:
                 return .secondary
             }

@@ -70,7 +70,7 @@ struct ResultView: View {
                 Spacer()
                 Image(systemName: "play.rectangle.fill")
                     .font(.system(size: 28, weight: .semibold))
-                    .foregroundStyle(.accent)
+                    .foregroundStyle(Color.accentColor)
             }
 
             HStack(spacing: 8) {
@@ -90,7 +90,7 @@ struct ResultView: View {
     private func fileCard(exportURL: URL) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: "film.stack.fill")
-                .foregroundStyle(.accent)
+                .foregroundStyle(Color.accentColor)
             VStack(alignment: .leading, spacing: 4) {
                 Text(exportURL.lastPathComponent)
                     .font(.headline)
@@ -108,7 +108,7 @@ struct ResultView: View {
     private func statusCard(text: String, systemImage: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: systemImage)
-                .foregroundStyle(.accent)
+                .foregroundStyle(Color.accentColor)
             Text(text)
                 .foregroundStyle(.secondary)
             Spacer()

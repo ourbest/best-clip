@@ -38,7 +38,7 @@ struct SettingsView: View {
                 if let statusMessage {
                     HStack(alignment: .top, spacing: 10) {
                         Image(systemName: "checkmark.seal.fill")
-                            .foregroundStyle(.accent)
+                            .foregroundStyle(Color.accentColor)
                         Text(statusMessage)
                             .foregroundStyle(.secondary)
                         Spacer()

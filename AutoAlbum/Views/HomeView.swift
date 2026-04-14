@@ -59,7 +59,7 @@ struct HomeView: View {
                 Spacer()
                 Image(systemName: "photo.on.rectangle.angled")
                     .font(.system(size: 28, weight: .semibold))
-                    .foregroundStyle(.accent)
+                    .foregroundStyle(Color.accentColor)
             }
 
             HStack(spacing: 8) {
@@ -88,7 +88,7 @@ struct HomeView: View {
             Text(number)
                 .font(.subheadline.bold())
                 .frame(width: 28, height: 28)
-                .foregroundStyle(.accent)
+                .foregroundStyle(Color.accentColor)
                 .background(Color.accentColor.opacity(0.14), in: Circle())
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)

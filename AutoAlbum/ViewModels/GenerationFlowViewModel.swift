@@ -147,7 +147,7 @@ final class GenerationFlowViewModel: ObservableObject {
         saveStatus = "设置已保存"
     }
 
-    func importSelection<Item: MediaSelectionItem>(_ items: [Item]) async {
+    func importSelection(_ items: [any MediaSelectionItem]) async {
         guard !items.isEmpty else { return }
 
         isImporting = true
@@ -155,7 +155,7 @@ final class GenerationFlowViewModel: ObservableObject {
         defer { isImporting = false }
 
         do {
-            let importedAssets = try await mediaImporter.importSnapshots(from: items.map { $0 as any MediaSelectionItem })
+            let importedAssets = try await mediaImporter.importSnapshots(from: items)
             availableAssets = importedAssets
             selectedAssetIDs = Set(importedAssets.map(\.id))
         } catch {

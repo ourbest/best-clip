@@ -16,6 +16,34 @@ struct MediaAssetSnapshot: Identifiable, Codable, Equatable {
     let stability: Double
     let ocrText: String?
     let speechText: String?
-    let sourceURL: URL? = nil
-    let previewURL: URL? = nil
+    let sourceURL: URL?
+    let previewURL: URL?
+
+    init(
+        id: String,
+        kind: MediaAssetKind,
+        timestamp: Date,
+        duration: Double?,
+        faces: Int,
+        scene: String,
+        sharpness: Double,
+        stability: Double,
+        ocrText: String?,
+        speechText: String?,
+        sourceURL: URL? = nil,
+        previewURL: URL? = nil
+    ) {
+        self.id = id
+        self.kind = kind
+        self.timestamp = timestamp
+        self.duration = duration
+        self.faces = faces
+        self.scene = scene
+        self.sharpness = sharpness
+        self.stability = stability
+        self.ocrText = ocrText
+        self.speechText = speechText
+        self.sourceURL = sourceURL
+        self.previewURL = previewURL
+    }
 }

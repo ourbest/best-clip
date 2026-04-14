@@ -39,7 +39,7 @@ struct StyleRecommendationView: View {
                         ForEach(Array(highlights.prefix(3)), id: \.id) { item in
                             HStack(alignment: .top, spacing: 10) {
                                 Image(systemName: "sparkle")
-                                    .foregroundStyle(.accent)
+                                    .foregroundStyle(Color.accentColor)
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("素材 \(item.id)")
                                         .font(.subheadline.bold())
@@ -98,7 +98,7 @@ struct StyleRecommendationView: View {
                 Spacer()
                 Image(systemName: "film.stack")
                     .font(.system(size: 28, weight: .semibold))
-                    .foregroundStyle(.accent)
+                    .foregroundStyle(Color.accentColor)
             }
 
             HStack(spacing: 8) {
@@ -126,7 +126,7 @@ struct StyleRecommendationView: View {
                 Spacer()
                 if selectedStyle == style {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.accent)
+                        .foregroundStyle(Color.accentColor)
                 }
             }
             .padding()

@@ -10,16 +10,6 @@ protocol MediaSelectionItem {
     func loadData() async throws -> Data?
 }
 
-extension PhotosPickerItem: MediaSelectionItem {
-    func loadFileURL() async throws -> URL? {
-        try await loadTransferable(type: URL.self)
-    }
-
-    func loadData() async throws -> Data? {
-        try await loadTransferable(type: Data.self)
-    }
-}
-
 protocol MediaSelectionImporting {
     func importSnapshots(from items: [any MediaSelectionItem]) async throws -> [MediaAssetSnapshot]
 }
