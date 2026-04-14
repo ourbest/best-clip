@@ -187,6 +187,65 @@ final class MemoryVideoPipelineTests: XCTestCase {
         XCTAssertEqual(result.summary.highlightItems.first?.id, "slightly-better-video")
         XCTAssertEqual(exporter.exportedAssets.first?.map(\.id), ["slightly-better-video"])
     }
+
+    func testNormalizesEmptyRecommendationTitleAndSubtitle() async throws {
+        let assets = [
+            MediaAssetSnapshot(
+                id: "photo-1",
+                kind: .photo,
+                timestamp: Date(timeIntervalSince1970: 1_700_720_000),
+                duration: nil,
+                faces: 2,
+                scene: "park",
+                sharpness: 0.91,
+                stability: 0.88,
+                ocrText: nil,
+                speechText: nil
+            )
+        ]
+
+        let client = EmptyTitleRecommendationClient()
+        let exporter = FakeExportService()
+        let pipeline = MemoryVideoPipeline(
+            recommendationClient: client,
+            exportService: exporter
+        )
+
+        let destinationURL = FileManager.default.temporaryDirectory.appendingPathComponent("normalized-title.mov")
+        let result = try await pipeline.generate(from: assets, to: destinationURL)
+
+        XCTAssertEqual(result.recommendation.title, "周末日常")
+        XCTAssertEqual(result.recommendation.subtitle, "从这组素材中整理出一条可分享的回忆。")
+    }
+
+    func testTrimsOverlongRecommendationTitle() async throws {
+        let assets = [
+            MediaAssetSnapshot(
+                id: "photo-1",
+                kind: .photo,
+                timestamp: Date(timeIntervalSince1970: 1_700_730_000),
+                duration: nil,
+                faces: 2,
+                scene: "cafe",
+                sharpness: 0.91,
+                stability: 0.9,
+                ocrText: nil,
+                speechText: nil
+            )
+        ]
+
+        let client = LongTitleRecommendationClient()
+        let exporter = FakeExportService()
+        let pipeline = MemoryVideoPipeline(
+            recommendationClient: client,
+            exportService: exporter
+        )
+
+        let destinationURL = FileManager.default.temporaryDirectory.appendingPathComponent("trimmed-title.mov")
+        let result = try await pipeline.generate(from: assets, to: destinationURL)
+
+        XCTAssertEqual(result.recommendation.title, "周末的一次很长的标题需要")
+    }
 }
 
 private final class FakeRecommendationClient: RecommendationProviding {
@@ -212,6 +271,40 @@ private final class FakeRecommendationClient: RecommendationProviding {
 private final class FailingRecommendationClient: RecommendationProviding {
     func requestRecommendation(for summary: AssetSummary) async throws -> LLMRecommendation {
         throw URLError(.cannotFindHost)
+    }
+}
+
+private final class EmptyTitleRecommendationClient: RecommendationProviding {
+    func requestRecommendation(for summary: AssetSummary) async throws -> LLMRecommendation {
+        LLMRecommendation(
+            theme: summary.recommendedTheme,
+            recommendedStyle: .lifeLog,
+            title: "",
+            subtitle: "",
+            highlightItems: summary.highlightItems.map {
+                .init(id: $0.id, priority: $0.priority, reason: $0.reason)
+            },
+            musicStyle: "轻快温暖",
+            transitionStyle: "柔和",
+            sharingCopy: "把这些片段留作回忆。"
+        )
+    }
+}
+
+private final class LongTitleRecommendationClient: RecommendationProviding {
+    func requestRecommendation(for summary: AssetSummary) async throws -> LLMRecommendation {
+        LLMRecommendation(
+            theme: summary.recommendedTheme,
+            recommendedStyle: .lifeLog,
+            title: "周末的一次很长的标题需要被截断",
+            subtitle: "轻松记录",
+            highlightItems: summary.highlightItems.map {
+                .init(id: $0.id, priority: $0.priority, reason: $0.reason)
+            },
+            musicStyle: "轻快温暖",
+            transitionStyle: "柔和",
+            sharingCopy: "把这些片段留作回忆。"
+        )
     }
 }
 

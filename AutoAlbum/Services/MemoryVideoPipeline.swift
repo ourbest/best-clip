@@ -16,6 +16,7 @@ struct MemoryVideoGenerationResult: Equatable {
 final class MemoryVideoPipeline {
     private let summaryBuilder: AssetSummaryBuilder
     private let selectionFilter: AssetSelectionFilter
+    private let recommendationNormalizer: RecommendationNormalizer
     private let recommendationClient: RecommendationProviding
     private let exportService: VideoExporting
     private let fallbackStyle: RecommendedStyle
@@ -23,12 +24,14 @@ final class MemoryVideoPipeline {
     init(
         summaryBuilder: AssetSummaryBuilder = AssetSummaryBuilder(),
         selectionFilter: AssetSelectionFilter = AssetSelectionFilter(),
+        recommendationNormalizer: RecommendationNormalizer = RecommendationNormalizer(),
         recommendationClient: RecommendationProviding,
         exportService: VideoExporting = VideoExportService(),
         fallbackStyle: RecommendedStyle = .lifeLog
     ) {
         self.summaryBuilder = summaryBuilder
         self.selectionFilter = selectionFilter
+        self.recommendationNormalizer = recommendationNormalizer
         self.recommendationClient = recommendationClient
         self.exportService = exportService
         self.fallbackStyle = fallbackStyle
@@ -45,7 +48,10 @@ final class MemoryVideoPipeline {
     ) async throws -> MemoryVideoGenerationResult {
         let eligibleAssets = selectionFilter.filter(assets)
         let summary = summaryBuilder.build(from: eligibleAssets)
-        let recommendation = applyPreferredStyle(try await loadRecommendation(for: summary), preferredStyle: preferredStyle)
+        let recommendation = recommendationNormalizer.normalize(
+            applyPreferredStyle(try await loadRecommendation(for: summary), preferredStyle: preferredStyle),
+            summary: summary
+        )
         let plan = CompositionPlanner().buildPlan(recommendation: recommendation, assets: eligibleAssets)
         let exportURL = try await exportService.export(plan: plan, assets: eligibleAssets, to: destinationURL)
 

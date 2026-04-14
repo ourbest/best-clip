@@ -12,6 +12,7 @@
 		196925463A899D25DDC2002F /* ThumbnailCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8030600CA1923F4FEF7C8078 /* ThumbnailCache.swift */; };
 		A4C3D1E10000000000000002 /* AssetQualityScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4C3D1E10000000000000001 /* AssetQualityScorer.swift */; };
 		A4C3D1E10000000000000004 /* AssetSelectionFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4C3D1E10000000000000003 /* AssetSelectionFilter.swift */; };
+		A4C3D1E10000000000000006 /* RecommendationNormalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4C3D1E10000000000000005 /* RecommendationNormalizer.swift */; };
 		AF11A1A11A11A11A11A11A11 /* VideoAssetAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF11A1A11A11A11A11A11B11 /* VideoAssetAnalyzer.swift */; };
 		AF11A1A11A11A11A11A11A13 /* VideoSegmentScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF11A1A11A11A11A11A11B13 /* VideoSegmentScorer.swift */; };
 		AF11A1A11A11A11A11A11A14 /* MotionSegmentPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF11A1A11A11A11A11A11B14 /* MotionSegmentPolicy.swift */; };
@@ -104,6 +105,7 @@
 		6F49BFBC1EE1DF0AB5FCCC84 /* GenerationFlowViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerationFlowViewModel.swift; sourceTree = "<group>"; };
 		A4C3D1E10000000000000001 /* AssetQualityScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssetQualityScorer.swift; sourceTree = "<group>"; };
 		A4C3D1E10000000000000003 /* AssetSelectionFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssetSelectionFilter.swift; sourceTree = "<group>"; };
+		A4C3D1E10000000000000005 /* RecommendationNormalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationNormalizer.swift; sourceTree = "<group>"; };
 		73A9C9A5DB05D53ED2BB8356 /* PhotosPickerAssetImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotosPickerAssetImporter.swift; sourceTree = "<group>"; };
 		7409B84CDBB359D6F6346CA9 /* AppRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRoute.swift; sourceTree = "<group>"; };
 		7F8684206AA9DF8326C885FC /* LLMRecommendation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMRecommendation.swift; sourceTree = "<group>"; };
@@ -195,6 +197,7 @@
 				CF09EF192FBA7C631249B179 /* AssetSummaryBuilder.swift */,
 				A4C3D1E10000000000000001 /* AssetQualityScorer.swift */,
 				A4C3D1E10000000000000003 /* AssetSelectionFilter.swift */,
+				A4C3D1E10000000000000005 /* RecommendationNormalizer.swift */,
 				42099947A6F7CD19D92BEF28 /* CompositionPlanner.swift */,
 				65EFF6358A169FF8765FA893 /* KeychainSecretStore.swift */,
 				A1503B4244B8E5CAEB8573BB /* LLMClient.swift */,
@@ -378,6 +381,7 @@
 				49AD4AF5245762539666BE15 /* AssetSummaryBuilder.swift in Sources */,
 				A4C3D1E10000000000000002 /* AssetQualityScorer.swift in Sources */,
 				A4C3D1E10000000000000004 /* AssetSelectionFilter.swift in Sources */,
+				A4C3D1E10000000000000006 /* RecommendationNormalizer.swift in Sources */,
 				170F3E80E0D59B72AA026468 /* AutoAlbumApp.swift in Sources */,
 				BB30DD158C7C87DA641B8805 /* CompositionPlan.swift in Sources */,
 				D565AFA637263B9EE31B9780 /* CompositionPlanner.swift in Sources */,
