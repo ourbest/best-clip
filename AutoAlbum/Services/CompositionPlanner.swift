@@ -9,8 +9,11 @@ struct CompositionPlanner {
 
     func buildPlan(recommendation: LLMRecommendation, assets: [MediaAssetSnapshot]) -> CompositionPlan {
         let orderedAssets = orderedAssets(for: recommendation, assets: assets)
-        let sections = orderedAssets.enumerated().flatMap { index, asset in
-            sections(for: asset, isFirst: index == 0, isLast: index == orderedAssets.count - 1)
+        var sections: [CompositionSection] = []
+        for (index, asset) in orderedAssets.enumerated() {
+            let isFirst = index == 0
+            let isLast = index == orderedAssets.count - 1
+            sections.append(contentsOf: self.sections(for: asset, isFirst: isFirst, isLast: isLast))
         }
 
         return CompositionPlan(

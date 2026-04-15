@@ -128,7 +128,7 @@ final class GenerationFlowViewModel: ObservableObject {
 
     func plan() -> CompositionPlan {
         let assets = effectiveAssets()
-        CompositionPlanner().buildPlan(
+        return CompositionPlanner().buildPlan(
             recommendation: effectiveRecommendation,
             assets: assets
         )
