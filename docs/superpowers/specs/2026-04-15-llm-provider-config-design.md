@@ -58,6 +58,14 @@ The field remains editable after the default is inserted.
 
 `LLMClient` remains generic and does not need provider-specific branching for this change.
 
+### Configuration validation
+
+The settings screen will include a `Validate` action that sends a minimal request using the current provider, base URL, model name, and API key.
+
+- Success means the app can reach the configured endpoint, authenticate, and decode a valid recommendation payload.
+- Failure should surface a readable message in the settings UI.
+- The validation action must not require a full export job and must not modify the saved settings.
+
 ### Compatibility expectations
 
 This change intentionally keeps request format assumptions stable. The initial implementation will continue using the current chat-completions request shape against the configured endpoint. That is sufficient for OpenAI and for OpenAI-compatible gateways. Anthropic can be configured with a provider preset and custom `baseURL`, but if its response shape diverges from the current parser, that will be addressed as a separate follow-up.
@@ -82,6 +90,7 @@ Add tests that cover:
 - settings persistence for provider and base URL
 - provider selection with default base URL values
 - editable base URL surviving save/reload
+- a one-tap configuration validation action in the settings screen
 - pipeline client construction using the configured endpoint
 - fallback behavior when API key is absent
 
@@ -92,4 +101,3 @@ Add tests that cover:
 3. Change pipeline construction to use the configured endpoint.
 4. Add tests for provider/base URL persistence and client selection.
 5. Verify the existing generation and fallback flows still behave correctly.
-
