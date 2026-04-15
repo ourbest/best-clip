@@ -70,32 +70,7 @@ final class MemoryVideoPipeline {
     }
 
     private func loadRecommendation(for summary: AssetSummary) async throws -> LLMRecommendation {
-        do {
-            return try await recommendationClient.requestRecommendation(for: summary)
-        } catch {
-            return fallbackRecommendation(for: summary)
-        }
-    }
-
-    private func fallbackRecommendation(for summary: AssetSummary) -> LLMRecommendation {
-        let highlightItems = summary.highlightItems.prefix(3).enumerated().map { index, item in
-            RecommendationHighlightItem(
-                id: item.id,
-                priority: index + 1,
-                reason: item.reason
-            )
-        }
-
-        return LLMRecommendation(
-            theme: summary.recommendedTheme,
-            recommendedStyle: fallbackStyle,
-            title: summary.recommendedTheme,
-            subtitle: "从这组素材中整理出一条可分享的回忆。",
-            highlightItems: highlightItems,
-            musicStyle: "轻快温暖",
-            transitionStyle: "柔和",
-            sharingCopy: "把这些片段留作回忆。"
-        )
+        try await recommendationClient.requestRecommendation(for: summary)
     }
 
     private func applyPreferredStyle(_ recommendation: LLMRecommendation, preferredStyle: RecommendedStyle?) -> LLMRecommendation {

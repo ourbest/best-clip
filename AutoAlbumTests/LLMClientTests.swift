@@ -159,6 +159,49 @@ final class GenerationFlowViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.exportURL?.lastPathComponent, "memory-video.mov")
         XCTAssertEqual(viewModel.generationStage, .finished)
     }
+
+    func testGeneratePreviewExportShowsFailureWhenRecommendationClientThrows() async {
+        let store = SettingsStore(
+            fileURL: FileManager.default.temporaryDirectory.appendingPathComponent("failed-generation-settings.json"),
+            secretStore: InMemorySecretStore()
+        )
+        var configured = store
+        configured.provider = .openAI
+        configured.baseURL = "https://example.com"
+        configured.modelName = "gpt-4o-mini"
+        configured.apiKey = "test-key"
+
+        let viewModel = GenerationFlowViewModel(
+            settingsStore: configured,
+            pipeline: MemoryVideoPipeline(recommendationClient: FailingRecommendationClient())
+        )
+        viewModel.availableAssets = [
+            .init(
+                id: "photo-1",
+                kind: .photo,
+                timestamp: Date(timeIntervalSince1970: 1_700_000_000),
+                duration: nil,
+                faces: 1,
+                scene: "park",
+                sharpness: 0.8,
+                stability: 0.7,
+                ocrText: nil,
+                speechText: nil
+            )
+        ]
+
+        await viewModel.generatePreviewExportAsync()
+
+        XCTAssertEqual(viewModel.generationStage, .failed)
+        XCTAssertTrue(viewModel.generationErrorMessage?.contains("生成失败") == true)
+        XCTAssertNil(viewModel.exportURL)
+    }
+}
+
+private final class FailingRecommendationClient: RecommendationProviding {
+    func requestRecommendation(for summary: AssetSummary) async throws -> LLMRecommendation {
+        throw URLError(.cannotConnectToHost)
+    }
 }
 
 final class MockURLProtocol: URLProtocol {

@@ -5,6 +5,7 @@ enum GenerationStage: Equatable {
     case idle
     case preparing
     case exporting
+    case failed
     case finished
 
     var title: String {
@@ -15,6 +16,8 @@ enum GenerationStage: Equatable {
             return "分析素材"
         case .exporting:
             return "导出视频"
+        case .failed:
+            return "生成失败"
         case .finished:
             return "已完成"
         }
@@ -28,6 +31,8 @@ enum GenerationStage: Equatable {
             return "正在整理素材摘要并请求推荐。"
         case .exporting:
             return "正在把时间线渲染成可分享的视频。"
+        case .failed:
+            return "LLM 请求失败，请检查设置后重试。"
         case .finished:
             return "可以预览、分享或保存到相册。"
         }
@@ -41,6 +46,8 @@ enum GenerationStage: Equatable {
             return 0.55
         case .exporting:
             return 0.85
+        case .failed:
+            return 0.55
         case .finished:
             return 1.0
         }
@@ -90,6 +97,7 @@ final class GenerationFlowViewModel: ObservableObject {
     @Published var importError: String? = nil
     @Published var saveStatus: String? = nil
     @Published var generationStage: GenerationStage = .idle
+    @Published var generationErrorMessage: String? = nil
     @Published var clusters: [RecommendationCluster] = []
     @Published var settingsProvider: SettingsStore.Provider
     @Published var settingsBaseURL: String
@@ -217,12 +225,9 @@ final class GenerationFlowViewModel: ObservableObject {
     func generatePreviewExportAsync() async {
         let outputURL = FileManager.default.temporaryDirectory.appendingPathComponent("memory-video.mov")
         let currentAssets = effectiveAssets()
-        let currentPlan = CompositionPlanner().buildPlan(
-            recommendation: effectiveRecommendation,
-            assets: currentAssets
-        )
 
         isGenerating = true
+        generationErrorMessage = nil
         generationStage = .preparing
         defer { isGenerating = false }
 
@@ -232,21 +237,22 @@ final class GenerationFlowViewModel: ObservableObject {
             return
         }
 
-        if let result = try? await pipeline.generate(
-            from: currentAssets,
-            to: outputURL,
-            preferredStyle: selectedStyle
-        ) {
+        generationStage = .exporting
+        do {
+            let result = try await pipeline.generate(
+                from: currentAssets,
+                to: outputURL,
+                preferredStyle: selectedStyle
+            )
             recommendation = result.recommendation
             clusters = result.clusters
             exportURL = result.exportURL
             generationStage = .finished
-            return
+        } catch {
+            exportURL = nil
+            generationErrorMessage = "生成失败：\(error.localizedDescription)"
+            generationStage = .failed
         }
-
-        generationStage = .exporting
-        exportURL = try? await VideoExportService().export(plan: currentPlan, assets: currentAssets, to: outputURL)
-        generationStage = .finished
     }
 
     func saveExportToPhotos() {
@@ -308,7 +314,7 @@ final class GenerationFlowViewModel: ObservableObject {
 
     private static func makePipeline(from settingsStore: SettingsStore) -> MemoryVideoPipeline {
         guard !settingsStore.apiKey.isEmpty else {
-            return MemoryVideoPipeline(recommendationClient: FailingRecommendationClient())
+            return MemoryVideoPipeline(recommendationClient: LocalRecommendationClient())
         }
 
         let baseURL = URL(string: settingsStore.baseURL) ?? URL(string: settingsStore.provider.defaultBaseURL)!
@@ -379,8 +385,25 @@ final class GenerationFlowViewModel: ObservableObject {
     }
 }
 
-private struct FailingRecommendationClient: RecommendationProviding {
+private struct LocalRecommendationClient: RecommendationProviding {
     func requestRecommendation(for summary: AssetSummary) async throws -> LLMRecommendation {
-        throw URLError(.cannotConnectToHost)
+        let highlightItems = summary.highlightItems.prefix(3).enumerated().map { index, item in
+            RecommendationHighlightItem(
+                id: item.id,
+                priority: index + 1,
+                reason: item.reason
+            )
+        }
+
+        return LLMRecommendation(
+            theme: summary.recommendedTheme,
+            recommendedStyle: .lifeLog,
+            title: summary.recommendedTheme,
+            subtitle: "从这组素材中整理出一条可分享的回忆。",
+            highlightItems: highlightItems,
+            musicStyle: "轻快温暖",
+            transitionStyle: "柔和",
+            sharingCopy: "把这些片段留作回忆。"
+        )
     }
 }

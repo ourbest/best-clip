@@ -34,14 +34,21 @@ struct AppRootView: View {
                         onBack: { state.currentRoute = .selectMedia }
                     )
                 case .generating:
-                    GenerationProgressView(stage: flow.generationStage, onGenerate: {
-                        await flow.generatePreviewExportAsync()
-                        if flow.exportURL != nil {
-                            await MainActor.run {
-                                state.currentRoute = .result
+                    GenerationProgressView(
+                        stage: flow.generationStage,
+                        errorMessage: flow.generationErrorMessage,
+                        onOpenSettings: {
+                            state.currentRoute = .settings
+                        },
+                        onGenerate: {
+                            await flow.generatePreviewExportAsync()
+                            if flow.exportURL != nil {
+                                await MainActor.run {
+                                    state.currentRoute = .result
+                                }
                             }
                         }
-                    })
+                    )
                 case .result:
                     ResultView(
                         exportURL: flow.exportURL,
