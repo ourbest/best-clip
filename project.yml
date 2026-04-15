@@ -28,9 +28,9 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         GENERATE_INFOPLIST_FILE: YES
-      configFiles:
-        Debug: xcshareddata/AutoAlbum.xcconfig
-        Release: xcshareddata/AutoAlbum.xcconfig
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: RMBY9EXYRL
+        CODE_SIGN_IDENTITY: "iPhone Developer"
     info:
       path: AutoAlbum/Info.plist
       properties:
