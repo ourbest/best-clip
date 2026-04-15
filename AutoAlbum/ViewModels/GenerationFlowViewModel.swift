@@ -91,8 +91,12 @@ final class GenerationFlowViewModel: ObservableObject {
     @Published var saveStatus: String? = nil
     @Published var generationStage: GenerationStage = .idle
     @Published var clusters: [RecommendationCluster] = []
+    @Published var settingsProvider: SettingsStore.Provider
+    @Published var settingsBaseURL: String
     @Published var settingsModelName: String
     @Published var settingsAPIKey: String
+    @Published var validationStatus: String?
+    @Published var isValidatingConfiguration = false
 
     init(
         launchArguments: [String] = ProcessInfo.processInfo.arguments,
@@ -107,6 +111,8 @@ final class GenerationFlowViewModel: ObservableObject {
         let recommendedStyle = launchConfiguration.stubRecommendationStyle ?? .lifeLog
         recommendation = Self.demoRecommendation(recommendedStyle: recommendedStyle)
         selectedStyle = recommendedStyle
+        settingsProvider = self.settingsStore.provider
+        settingsBaseURL = self.settingsStore.baseURL
         settingsModelName = self.settingsStore.modelName
         settingsAPIKey = self.settingsStore.apiKey
 
@@ -143,11 +149,47 @@ final class GenerationFlowViewModel: ObservableObject {
     }
 
     func saveSettings() {
+        settingsStore.provider = settingsProvider
+        settingsStore.baseURL = settingsBaseURL
         settingsStore.modelName = settingsModelName
         settingsStore.apiKey = settingsAPIKey
+        settingsStore.applyProviderDefaults()
+        settingsProvider = settingsStore.provider
+        settingsBaseURL = settingsStore.baseURL
         settingsStore.save()
         pipeline = Self.makePipeline(from: settingsStore)
+        validationStatus = nil
         saveStatus = "设置已保存"
+    }
+
+    func validateSettings() async {
+        validationStatus = nil
+        guard !settingsAPIKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            validationStatus = "请先填写 API Key"
+            return
+        }
+
+        isValidatingConfiguration = true
+        defer { isValidatingConfiguration = false }
+
+        let trimmedBaseURL = settingsBaseURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let url = URL(string: trimmedBaseURL.isEmpty ? settingsProvider.defaultBaseURL : trimmedBaseURL) else {
+            validationStatus = "Base URL 格式无效"
+            return
+        }
+
+        let client = LLMClient(
+            baseURL: url,
+            apiKey: settingsAPIKey,
+            modelName: settingsModelName
+        )
+
+        do {
+            try await client.validateConfiguration()
+            validationStatus = "配置验证成功"
+        } catch {
+            validationStatus = "配置验证失败：\(error.localizedDescription)"
+        }
     }
 
     func importSelection(_ items: [any MediaSelectionItem]) async {
@@ -269,7 +311,7 @@ final class GenerationFlowViewModel: ObservableObject {
             return MemoryVideoPipeline(recommendationClient: FailingRecommendationClient())
         }
 
-        let baseURL = URL(string: "https://api.openai.com")!
+        let baseURL = URL(string: settingsStore.baseURL) ?? URL(string: settingsStore.provider.defaultBaseURL)!
         let client = LLMClient(
             baseURL: baseURL,
             apiKey: settingsStore.apiKey,

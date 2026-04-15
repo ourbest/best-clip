@@ -1,11 +1,16 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @Binding var provider: SettingsStore.Provider
+    @Binding var baseURL: String
     @Binding var modelName: String
     @Binding var apiKey: String
+    let isValidating: Bool
     let statusMessage: String?
     let onSave: () -> Void
+    let onValidate: () -> Void
     let onClose: () -> Void
+    @State private var lastProvider: SettingsStore.Provider?
 
     var body: some View {
         ScrollView {
@@ -13,12 +18,35 @@ struct SettingsView: View {
                 header
 
                 VStack(alignment: .leading, spacing: 12) {
+                    Text("Provider")
+                        .font(.headline)
+                    Picker("Provider", selection: $provider) {
+                        Text("OpenAI").tag(SettingsStore.Provider.openAI)
+                        Text("Anthropic").tag(SettingsStore.Provider.anthropic)
+                    }
+                    .pickerStyle(.segmented)
+                    .onAppear {
+                        lastProvider = provider
+                    }
+                    .onChange(of: provider) { newProvider in
+                        let previousDefault = lastProvider?.defaultBaseURL ?? ""
+                        if baseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || baseURL == previousDefault {
+                            baseURL = newProvider.defaultBaseURL
+                        }
+                        lastProvider = newProvider
+                    }
+
+                    Text("Base URL")
+                        .font(.headline)
+                    TextField(provider.defaultBaseURL, text: $baseURL)
+                        .textFieldStyle(.roundedBorder)
+
                     Text("模型配置")
                         .font(.headline)
                     TextField("gpt-4o-mini", text: $modelName)
                         .textFieldStyle(.roundedBorder)
 
-                    Text("OpenAI API Key")
+                    Text("API Key")
                         .font(.headline)
                     SecureField("sk-...", text: $apiKey)
                         .textFieldStyle(.roundedBorder)
@@ -53,6 +81,13 @@ struct SettingsView: View {
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
+
+                    Button(action: onValidate) {
+                        Label(isValidating ? "验证中..." : "验证配置", systemImage: "checkmark.seal.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(isValidating)
 
                     Button(action: onClose) {
                         Label("完成", systemImage: "checkmark")

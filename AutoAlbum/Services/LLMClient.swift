@@ -5,9 +5,18 @@ protocol LLMClientProtocol {
 }
 
 final class LLMClient: LLMClientProtocol {
-    enum ClientError: Error {
+    enum ClientError: LocalizedError {
         case invalidResponse
         case httpError(Int)
+
+        var errorDescription: String? {
+            switch self {
+            case .invalidResponse:
+                return "返回格式无效"
+            case .httpError(let statusCode):
+                return "请求失败，HTTP \(statusCode)"
+            }
+        }
     }
 
     private let session: URLSession
@@ -41,6 +50,15 @@ final class LLMClient: LLMClientProtocol {
 
         let rawResponse = String(decoding: data, as: UTF8.self)
         return try RecommendationMapper().decode(rawResponse)
+    }
+
+    func validateConfiguration() async throws {
+        _ = try await requestRecommendation(
+            for: AssetSummary(
+                recommendedTheme: "配置验证",
+                highlightItems: []
+            )
+        )
     }
 
     private func makeRequest(prompt: String) throws -> URLRequest {

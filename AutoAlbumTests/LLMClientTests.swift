@@ -62,6 +62,83 @@ final class LLMClientTests: XCTestCase {
         XCTAssertEqual(recommendation.theme, "生日聚会")
         XCTAssertEqual(recommendation.highlightItems.first?.id, "photo-1")
     }
+
+    func testValidateConfigurationUsesTheConfiguredEndpoint() async throws {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [MockURLProtocol.self]
+        let session = URLSession(configuration: configuration)
+
+        MockURLProtocol.requestHandler = { request in
+            XCTAssertEqual(request.url?.absoluteString, "https://proxy.example.com/v1/chat/completions")
+            XCTAssertEqual(request.httpMethod, "POST")
+
+            let bodyData = try XCTUnwrap(request.httpBody)
+            let body = try XCTUnwrap(JSONSerialization.jsonObject(with: bodyData) as? [String: Any])
+            XCTAssertEqual(body["model"] as? String, "claude-sonnet-4")
+
+            let responseJSON = """
+            {
+              "theme": "配置验证",
+              "recommended_style": "生活记录感",
+              "title": "配置成功",
+              "subtitle": "可以开始生成",
+              "highlight_items": [],
+              "music_style": "温暖轻快",
+              "transition_style": "柔和",
+              "sharing_copy": "配置验证通过。"
+            }
+            """
+
+            let data = Data(responseJSON.utf8)
+            return HTTPURLResponse(
+                url: request.url!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!.with(data: data)
+        }
+
+        let client = LLMClient(
+            session: session,
+            baseURL: URL(string: "https://proxy.example.com")!,
+            apiKey: "test-key",
+            modelName: "claude-sonnet-4"
+        )
+
+        try await client.validateConfiguration()
+    }
+
+    func testValidateConfigurationSurfacesHttpFailure() async throws {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [MockURLProtocol.self]
+        let session = URLSession(configuration: configuration)
+
+        MockURLProtocol.requestHandler = { request in
+            let response = HTTPURLResponse(
+                url: request.url!,
+                statusCode: 401,
+                httpVersion: nil,
+                headerFields: ["Content-Type": "application/json"]
+            )!
+            return response.with(data: Data(#"{"error":"unauthorized"}"#.utf8))
+        }
+
+        let client = LLMClient(
+            session: session,
+            baseURL: URL(string: "https://proxy.example.com")!,
+            apiKey: "test-key",
+            modelName: "claude-sonnet-4"
+        )
+
+        do {
+            try await client.validateConfiguration()
+            XCTFail("Expected validation to fail")
+        } catch LLMClient.ClientError.httpError(let statusCode) {
+            XCTAssertEqual(statusCode, 401)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
 }
 
 final class GenerationFlowViewModelTests: XCTestCase {

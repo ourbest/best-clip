@@ -56,10 +56,18 @@ struct AppRootView: View {
                     )
                 case .settings:
                     SettingsView(
+                        provider: $flow.settingsProvider,
+                        baseURL: $flow.settingsBaseURL,
                         modelName: $flow.settingsModelName,
                         apiKey: $flow.settingsAPIKey,
-                        statusMessage: flow.saveStatus,
+                        isValidating: flow.isValidatingConfiguration,
+                        statusMessage: flow.validationStatus ?? flow.saveStatus,
                         onSave: { flow.saveSettings() },
+                        onValidate: {
+                            Task {
+                                await flow.validateSettings()
+                            }
+                        },
                         onClose: { state.currentRoute = .home }
                     )
                 }
