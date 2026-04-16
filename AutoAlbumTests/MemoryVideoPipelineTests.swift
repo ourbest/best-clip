@@ -21,10 +21,9 @@ final class MemoryVideoPipelineTests: XCTestCase {
         ]
 
         let client = FakeRecommendationClient()
-        let exporter = FakeExportService()
         let pipeline = MemoryVideoPipeline(
             recommendationClient: client,
-            exportService: exporter
+            exportService: FakeExportService()
         )
 
         let destinationURL = FileManager.default.temporaryDirectory.appendingPathComponent("memory-video.mov")
@@ -36,7 +35,7 @@ final class MemoryVideoPipelineTests: XCTestCase {
         XCTAssertEqual(result.plan.sections.first?.assetID, "photo-1")
     }
 
-    func testFallsBackToLocalRecommendationWhenClientFails() async throws {
+    func testRemoteRecommendationFailureThrows() async throws {
         let assets = [
             MediaAssetSnapshot(
                 id: "photo-1",
@@ -60,11 +59,40 @@ final class MemoryVideoPipelineTests: XCTestCase {
         )
 
         let destinationURL = FileManager.default.temporaryDirectory.appendingPathComponent("fallback.mov")
-        let result = try await pipeline.generate(from: assets, to: destinationURL)
 
-        XCTAssertEqual(result.recommendation.theme, "周末日常")
-        XCTAssertEqual(result.recommendation.recommendedStyle, .lifeLog)
-        XCTAssertEqual(exporter.exportedPlans.first?.title, "周末日常")
+        do {
+            _ = try await pipeline.generate(from: assets, to: destinationURL)
+            XCTFail("Expected pipeline to throw")
+        } catch {
+            XCTAssertFalse(error.localizedDescription.isEmpty)
+        }
+    }
+
+    func testGeneratesWithLocalRecommendationWhenAPIKeyIsMissing() async throws {
+        let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent("missing-api-key.json")
+        let store = SettingsStore(fileURL: fileURL, secretStore: InMemorySecretStore())
+        let viewModel = GenerationFlowViewModel(settingsStore: store)
+
+        viewModel.availableAssets = [
+            MediaAssetSnapshot(
+                id: "photo-1",
+                kind: .photo,
+                timestamp: Date(timeIntervalSince1970: 1_700_000_000),
+                duration: nil,
+                faces: 1,
+                scene: "park",
+                sharpness: 0.8,
+                stability: 0.7,
+                ocrText: nil,
+                speechText: nil
+            )
+        ]
+        viewModel.selectedAssetIDs = ["photo-1"]
+
+        await viewModel.generatePreviewExportAsync()
+
+        XCTAssertEqual(viewModel.generationStage, .finished)
+        XCTAssertNotNil(viewModel.exportURL)
     }
 
     func testImportsSelectionIntoAssets() async throws {

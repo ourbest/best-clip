@@ -2,6 +2,8 @@ import SwiftUI
 
 struct GenerationProgressView: View {
     let stage: GenerationStage
+    let errorMessage: String?
+    let onOpenSettings: () -> Void
     let onGenerate: () async -> Void
 
     var body: some View {
@@ -38,10 +40,28 @@ struct GenerationProgressView: View {
             }
             .padding()
             .background(Color.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+
+            if stage == .failed || errorMessage != nil {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("生成失败")
+                        .font(.headline)
+                    Text(errorMessage ?? stage.subtitle)
+                        .foregroundStyle(.secondary)
+                    Button(action: onOpenSettings) {
+                        Label("去设置修改 LLM", systemImage: "gearshape.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                .padding()
+                .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            }
         }
         .padding()
         .task {
-            await onGenerate()
+            if stage != .failed {
+                await onGenerate()
+            }
         }
     }
 

@@ -34,14 +34,21 @@ struct AppRootView: View {
                         onBack: { state.currentRoute = .selectMedia }
                     )
                 case .generating:
-                    GenerationProgressView(stage: flow.generationStage, onGenerate: {
-                        await flow.generatePreviewExportAsync()
-                        if flow.exportURL != nil {
-                            await MainActor.run {
-                                state.currentRoute = .result
+                    GenerationProgressView(
+                        stage: flow.generationStage,
+                        errorMessage: flow.generationErrorMessage,
+                        onOpenSettings: {
+                            state.currentRoute = .settings
+                        },
+                        onGenerate: {
+                            await flow.generatePreviewExportAsync()
+                            if flow.exportURL != nil {
+                                await MainActor.run {
+                                    state.currentRoute = .result
+                                }
                             }
                         }
-                    })
+                    )
                 case .result:
                     ResultView(
                         exportURL: flow.exportURL,
@@ -56,10 +63,18 @@ struct AppRootView: View {
                     )
                 case .settings:
                     SettingsView(
+                        provider: $flow.settingsProvider,
+                        baseURL: $flow.settingsBaseURL,
                         modelName: $flow.settingsModelName,
                         apiKey: $flow.settingsAPIKey,
-                        statusMessage: flow.saveStatus,
+                        isValidating: flow.isValidatingConfiguration,
+                        statusMessage: flow.validationStatus ?? flow.saveStatus,
                         onSave: { flow.saveSettings() },
+                        onValidate: {
+                            Task {
+                                await flow.validateSettings()
+                            }
+                        },
                         onClose: { state.currentRoute = .home }
                     )
                 }
